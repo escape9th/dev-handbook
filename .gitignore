@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.edgeprofile/
+_scene.html
+.DS_Store

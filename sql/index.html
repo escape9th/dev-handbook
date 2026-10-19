@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL 入门 · 从建表到 JOIN</title>
+<link rel="stylesheet" href="../assets/handbook.css">
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h3>本章</h3>
+  <a href="#what">0 · 数据库到底在存什么</a>
+  <a href="#basic">1 · 建表 / 插入 / 查询</a>
+  <a href="#filter">2 · 条件 排序 限量</a>
+  <a href="#join">3 · 两表 JOIN</a>
+  <a href="#agg">4 · 统计 / 修改 / 删除</a>
+  <a href="#pit">5 · 最容易出事的四件事</a>
+  <h3>其他章节</h3>
+  <a href="../index.html">← 返回总目录</a>
+</nav>
+
+<main>
+<a class="back" href="../index.html">← 总目录</a>
+<h1>SQL 入门</h1>
+<p class="sub">下面每条语句都在本机 <strong>SQLite</strong> 引擎上真实执行过（Python 内置），结果是真的</p>
+
+<div class="chapter" id="what">
+  <h2><span class="num">0</span> 数据库到底在存什么</h2>
+  <p class="goal">关系型数据库 = 一堆<strong>表</strong>。表 = 行（记录）+ 列（字段），和 Excel 长得很像，但多了类型、约束和并发控制。</p>
+  <table>
+    <tr><th>概念</th><th>Excel 里的对应</th><th>说明</th></tr>
+    <tr><td>表 table</td><td>一个工作表</td><td>同类数据放一张表，比如 users</td></tr>
+    <tr><td>行 row</td><td>一行</td><td>一条记录，比如一个用户</td></tr>
+    <tr><td>列 column</td><td>一列</td><td>一个字段，比如 name</td></tr>
+    <tr><td>主键 primary key</td><td>行号（但不会重复）</td><td>唯一标识一行，常用自增 id</td></tr>
+    <tr><td>外键 foreign key</td><td>——</td><td>指向另一张表的主键，比如 orders.user_id</td></tr>
+  </table>
+  <div class="tip">🗣️ SQL 就是「跟数据库说话的语言」。你说 <code>SELECT name FROM users</code>，它把名字列给你。</div>
+</div>
+
+<div class="chapter" id="basic">
+  <h2><span class="num">1</span> 建表 / 插入 / 查询</h2>
+  <p class="goal">三件套：<code>CREATE TABLE</code> → <code>INSERT</code> → <code>SELECT</code>。</p>
+  <div class="shot"><img src="shots/01_basic.png" alt="SQL 基础">
+    <div class="cap">真实执行：建表 → 一次插 3 行 → 查全部</div></div>
+  <div class="step"><div class="badge">1</div><p><code>INTEGER PRIMARY KEY</code> 写在 SQLite 里就是「自增主键」，MySQL 写 <code>INT AUTO_INCREMENT PRIMARY KEY</code>。</p></div>
+  <div class="step"><div class="badge">2</div><p>一次插多行：<code>VALUES (...), (...), (...)</code>，比执行三次 INSERT 快得多。</p></div>
+  <div class="step"><div class="badge">3</div><p><code>SELECT *</code> 取所有列；生产上建议<strong>只写需要的列名</strong>，少传数据更快。</p></div>
+</div>
+
+<div class="chapter" id="filter">
+  <h2><span class="num">2</span> 条件 / 排序 / 限量</h2>
+  <p class="goal">真正干活时，几乎不会「查全部」。</p>
+  <div class="shot"><img src="shots/02_filter.png" alt="SQL 过滤排序">
+    <div class="cap">WHERE 过滤 → ORDER BY 排序 → LIMIT 取前 N 条</div></div>
+  <div class="tip">📐 <strong>SQL 的执行顺序</strong>（背下来能解决一半的疑惑）：<br>
+  <code>FROM</code> → <code>WHERE</code> → <code>GROUP BY</code> → <code>HAVING</code> → <code>SELECT</code> → <code>ORDER BY</code> → <code>LIMIT</code></div>
+  <table>
+    <tr><th>想干嘛</th><th>写法</th></tr>
+    <tr><td>等于 / 不等于</td><td><code>WHERE age = 18</code> / <code>age &lt;&gt; 18</code></td></tr>
+    <tr><td>范围</td><td><code>WHERE age BETWEEN 18 AND 30</code></td></tr>
+    <tr><td>模糊匹配</td><td><code>WHERE name LIKE '小%'</code>（% 任意字符）</td></tr>
+    <tr><td>多条件</td><td><code>WHERE age &gt; 20 AND city = '北京'</code></td></tr>
+    <tr><td>翻页</td><td><code>LIMIT 10 OFFSET 20</code>（第 3 页，每页 10 条）</td></tr>
+  </table>
+</div>
+
+<div class="chapter" id="join">
+  <h2><span class="num">3</span> 两表 JOIN（最常考）</h2>
+  <p class="goal">数据分表存，查的时候要拼起来 —— 这就是 JOIN。</p>
+  <div class="shot"><img src="shots/03_join.png" alt="SQL JOIN">
+    <div class="cap">users 和 orders 通过 user_id 关联，查出「谁买了什么」</div></div>
+  <div class="step"><div class="badge">1</div><p><code>users.id</code> 是主键，<code>orders.user_id</code> 是外键 —— 这层关系是 JOIN 的基础。</p></div>
+  <div class="step"><div class="badge">2</div><p><code>JOIN ... ON 条件</code> 把两张表接到一起；<code>u</code> / <code>o</code> 是表别名。</p></div>
+  <div class="step"><div class="badge">3</div><p><code>INNER JOIN</code>（默认）= 两边都匹配才出现；<code>LEFT JOIN</code> = 左表全保留，右边没匹配就填 NULL。</p></div>
+  <div class="warn">⚠️ 最常见错误：忘了写 <code>ON</code> 条件。那样会变成「笛卡尔积」—— 3 个用户 × 3 个订单 = 9 行，数据全乱。</div>
+</div>
+
+<div class="chapter" id="agg">
+  <h2><span class="num">4</span> 统计 / 修改 / 删除</h2>
+  <p class="goal">这三个必须在事务或谨慎操作下用，尤其是后两个。</p>
+  <div class="shot"><img src="shots/04_aggregate.png" alt="SQL 聚合与改删">
+    <div class="cap">GROUP BY + COUNT/SUM 统计；UPDATE 改一行；DELETE 删一行</div></div>
+  <table>
+    <tr><th>函数</th><th>作用</th></tr>
+    <tr><td><code>COUNT(*)</code></td><td>数行数</td></tr>
+    <tr><td><code>SUM(x)</code></td><td>求和</td></tr>
+    <tr><td><code>AVG(x)</code> / <code>MAX(x)</code> / <code>MIN(x)</code></td><td>平均 / 最大 / 最小</td></tr>
+  </table>
+  <div class="danger">💀 <strong>UPDATE / DELETE 不带 WHERE = 全表遭殃。</strong><br>
+  新手最经典的事故。<strong>养成习惯：先写 WHERE，用同样的条件 SELECT 一遍，确认行数对了，再把 SELECT 改成 UPDATE/DELETE。</strong><br>
+  <code>UPDATE orders SET amount = 199 WHERE id = 2;</code> ✅<br>
+  <code>UPDATE orders SET amount = 199;</code> ❌ 全表金额都变 199</div>
+</div>
+
+<div class="chapter" id="pit">
+  <h2><span class="num">5</span> 最容易出事的四件事</h2>
+  <div class="warn"><strong>① 不带 WHERE 就 UPDATE/DELETE</strong> —— 见上节，先 SELECT 验证。</div>
+  <div class="warn"><strong>② NULL 的坑。</strong><code>WHERE age &lt;&gt; 18</code> 查不到 age 为 NULL 的行。<br>
+  判空必须写 <code>WHERE age IS NULL</code> / <code>IS NOT NULL</code>。</div>
+  <div class="warn"><strong>③ 没有索引就查大表。</strong><br>
+  几百万行的表上 <code>WHERE name = 'x'</code> 会扫全表。给常查的列建索引：<code>CREATE INDEX idx_users_name ON users(name);</code></div>
+  <div class="warn"><strong>④ 在生产库上直接试 SQL。</strong><br>
+  先在本机建个一样的表试，或用 <code>BEGIN; ... ROLLBACK;</code> 包起来。</div>
+  <div class="ok">✅ 不同数据库的差异（SQLite vs MySQL vs PostgreSQL）主要在：自增主键写法、字符串函数、日期函数。核心的 SELECT / WHERE / JOIN / GROUP BY <strong>几乎通用</strong>。</div>
+</div>
+
+<footer>截图来源：本机 SQLite（Python 内置引擎）· 所有 SQL 真实执行，结果非编造</footer>
+</main>
+</div>
+</body>
+</html>

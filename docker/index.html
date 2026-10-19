@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker 入门 · 从概念到 compose</title>
+<link rel="stylesheet" href="../assets/handbook.css">
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h3>本章</h3>
+  <a href="#what">0 · 镜像和容器到底是什么</a>
+  <a href="#life">1 · 容器生命周期</a>
+  <a href="#dockerfile">2 · Dockerfile 与构建</a>
+  <a href="#port">3 · 端口映射与数据卷</a>
+  <a href="#compose">4 · Compose 起整套</a>
+  <a href="#pit">5 · 新手必踩的坑</a>
+  <h3>其他章节</h3>
+  <a href="../index.html">← 返回总目录</a>
+</nav>
+
+<main>
+<a class="back" href="../index.html">← 总目录</a>
+<h1>Docker 入门</h1>
+<p class="sub">⚠️ 你这台机器<strong>没有安装 Docker</strong>，所以本章的终端图是<strong>示例输出</strong>（图中已标注），不是真实截图。命令和概念是准确的。</p>
+
+<div class="warn">📌 想让我用真实截图重做这一章？装好 Docker Desktop 后告诉我，我重新生成。</div>
+
+<div class="chapter" id="what">
+  <h2><span class="num">0</span> 镜像和容器到底是什么</h2>
+  <p class="goal">最容易搞混的一对概念。用「代码」和「进程」来类比就通了。</p>
+  <table>
+    <tr><th></th><th>Docker 镜像 image</th><th>Docker 容器 container</th></tr>
+    <tr><td>类比</td><td>一个装好的软件安装包 / 类（class）</td><td>跑起来的程序 / 实例（instance）</td></tr>
+    <tr><td>状态</td><td>只读、不变</td><td>可读写、会跑</td></tr>
+    <tr><td>数量关系</td><td>一个镜像可以起多个容器</td><td>每个容器有自己的文件改动</td></tr>
+    <tr><td>命令</td><td><code>docker build</code> / <code>docker pull</code></td><td><code>docker run</code></td></tr>
+  </table>
+  <div class="tip">🧠 一句话：<strong>镜像 = 模板，容器 = 用模板跑出来的实例。</strong><br>
+  容器删了，镜像还在；镜像删了，以它为基础的容器也起不来。</div>
+</div>
+
+<div class="chapter" id="life">
+  <h2><span class="num">1</span> 容器生命周期</h2>
+  <p class="goal">四个命令覆盖 90% 的操作：<code>run</code> / <code>ps</code> / <code>stop</code> / <code>rm</code>。</p>
+  <div class="shot"><img src="shots/01_lifecycle.png" alt="Docker 生命周期">
+    <div class="cap">示例输出（本机未安装 Docker）</div></div>
+  <table>
+    <tr><th>命令</th><th>作用</th><th>最常用的参数</th></tr>
+    <tr><td><code>docker run</code></td><td>建并启动容器</td><td><code>-d</code> 后台、<code>--name</code> 起名、<code>-p</code> 端口</td></tr>
+    <tr><td><code>docker ps</code></td><td>看运行中的容器</td><td><code>-a</code> 连已停止的也看</td></tr>
+    <tr><td><code>docker logs</code></td><td>看容器日志</td><td><code>-f</code> 持续跟踪</td></tr>
+    <tr><td><code>docker exec -it</code></td><td>进容器里敲命令</td><td><code>docker exec -it web bash</code></td></tr>
+    <tr><td><code>docker stop</code> / <code>rm</code></td><td>停 / 删容器</td><td><code>rm -f</code> 强制删</td></tr>
+  </table>
+  <div class="tip">🔁 记住顺序：<code>run</code> 起 → <code>ps</code> 看 → <code>logs</code> 查 → <code>exec</code> 进 → <code>stop</code> 停 → <code>rm</code> 删。</div>
+</div>
+
+<div class="chapter" id="dockerfile">
+  <h2><span class="num">2</span> Dockerfile 与构建</h2>
+  <p class="goal">Dockerfile = 怎么把你的应用打包成镜像的说明书。</p>
+  <div class="shot"><img src="shots/02_dockerfile.png" alt="Dockerfile 构建">
+    <div class="cap">示例输出（本机未安装 Docker）</div></div>
+  <table>
+    <tr><th>指令</th><th>意思</th></tr>
+    <tr><td><code>FROM</code></td><td>基于哪个镜像（必须第一行）</td></tr>
+    <tr><td><code>WORKDIR</code></td><td>设置工作目录，之后命令都在这里执行</td></tr>
+    <tr><td><code>COPY</code></td><td>把本机文件复制进镜像</td></tr>
+    <tr><td><code>RUN</code></td><td><strong>构建时</strong>执行（装依赖）</td></tr>
+    <tr><td><code>CMD</code></td><td><strong>启动时</strong>执行（跑程序）</td></tr>
+    <tr><td><code>EXPOSE</code></td><td>声明用哪个端口（只是文档作用）</td></tr>
+  </table>
+  <div class="tip">⚡ <strong>缓存技巧</strong>：先 <code>COPY requirements.txt</code> 再 <code>RUN pip install</code>，最后才 <code>COPY . .</code>。<br>
+  这样你改代码时，依赖那一层不用重装，构建快几十倍。</div>
+  <div class="warn">⚠️ <code>RUN</code> 和 <code>CMD</code> 的区别是新手第一大坑：<strong>RUN 在 build 阶段跑（打镜像时），CMD 在 run 阶段跑（启动容器时）。</strong></div>
+</div>
+
+<div class="chapter" id="port">
+  <h2><span class="num">3</span> 端口映射与数据卷</h2>
+  <p class="goal">两个「为什么」：为什么容器里的服务我访问不到？为什么容器删了数据就没了？</p>
+  <div class="shot"><img src="shots/03_port_volume.png" alt="端口与卷">
+    <div class="cap">示例输出（本机未安装 Docker）</div></div>
+  <div class="step"><div class="badge">1</div><p><strong>端口</strong>：<code>-p 8080:80</code> = 本机 8080 → 容器 80。<strong>左边是你访问的，右边是容器里的。</strong>写反了就访问不到。</p></div>
+  <div class="step"><div class="badge">2</div><p><strong>数据卷</strong>：<code>-v 本机目录:容器目录</code>。容器是可丢弃的，数据必须放在卷里才能留下来。</p></div>
+  <div class="step"><div class="badge">3</div><p>验证：<code>curl -I http://localhost:8080</code> 返回 200 就通了。</p></div>
+  <div class="danger">🚫 常见错误：容器里服务监听 <code>127.0.0.1</code>。容器内的 localhost 是容器自己，外部访问不到。<strong>要让服务监听 <code>0.0.0.0</code></strong>。</div>
+</div>
+
+<div class="chapter" id="compose">
+  <h2><span class="num">4</span> Compose：一条命令起整套</h2>
+  <p class="goal">真实项目往往是「应用 + 数据库 + Redis」。一个个 <code>docker run</code> 太累，用 compose 写成一个文件。</p>
+  <div class="shot"><img src="shots/04_compose.png" alt="Docker Compose">
+    <div class="cap">示例输出（本机未安装 Docker）</div></div>
+  <div class="step"><div class="badge">1</div><p><code>docker-compose.yml</code> 里每个 <code>services:</code> 下的条目 = 一个容器。</p></div>
+  <div class="step"><div class="badge">2</div><p><code>docker compose up -d</code> 一次拉起全部；<code>down</code> 全部停止并清理网络。</p></div>
+  <div class="step"><div class="badge">3</div><p>服务之间可以直接用<strong>服务名</strong>当主机名互相访问（比如 web 里连 <code>db:5432</code>），不用记 IP。</p></div>
+  <div class="tip">📦 <code>depends_on</code> 只保证启动顺序，不保证「数据库已经能连」。真要等就写健康检查 <code>healthcheck</code>。</div>
+</div>
+
+<div class="chapter" id="pit">
+  <h2><span class="num">5</span> 新手必踩的坑</h2>
+  <div class="warn"><strong>① 端口写反。</strong><code>-p 80:8080</code> 是「本机 80 → 容器 8080」。记法：<strong>左本机右容器</strong>。</div>
+  <div class="warn"><strong>② 数据没放卷里。</strong>容器一删数据就没了，数据库尤其致命。</div>
+  <div class="warn"><strong>③ 用 latest 标签。</strong><code>nginx:latest</code> 今天和明天可能不是一个东西，生产要写明确版本，如 <code>nginx:1.27</code>。</div>
+  <div class="warn"><strong>④ 镜像越做越大。</strong>用 <code>-slim</code> / <code>alpine</code> 基础镜像，加 <code>.dockerignore</code> 排除 node_modules、.git。</div>
+  <div class="warn"><strong>⑤ Windows 上要先装 WSL2。</strong>Docker Desktop 依赖它，装之前先 <code>wsl --install</code> 并重启。</div>
+  <div class="ok">✅ 学习路径建议：先只玩 <code>run/ps/logs/exec</code> 五个命令 → 再写 Dockerfile → 最后上 compose。别一上来就看 Kubernetes。</div>
+</div>
+
+<footer>本章截图为示例输出 · 本机未安装 Docker · 命令与概念来自官方文档</footer>
+</main>
+</div>
+</body>
+</html>

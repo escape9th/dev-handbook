@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redis 入门 · 从零到能干活</title>
+<link rel="stylesheet" href="../assets/handbook.css">
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h3>本章</h3>
+  <a href="#what">0 · 它到底是干什么的</a>
+  <a href="#basic">1 · 连上并跑通第一条命令</a>
+  <a href="#types">2 · 三种最常用的数据结构</a>
+  <a href="#expire">3 · 过期、删除、扫描</a>
+  <a href="#info">4 · 看服务器信息</a>
+  <a href="#pit">5 · 新手必踩的坑</a>
+  <h3>其他章节</h3>
+  <a href="../index.html">← 返回总目录</a>
+</nav>
+
+<main>
+<a class="back" href="../index.html">← 总目录</a>
+<h1>Redis 入门</h1>
+<p class="sub">截图来自你本机真实运行的 <strong>Memurai 8.1（Redis 8.2 兼容）</strong>，命令和输出都是真跑出来的</p>
+
+<div class="chapter" id="what">
+  <h2><span class="num">0</span> 它到底是干什么的</h2>
+  <p class="goal">一句话：<strong>把数据放在内存里的键值数据库</strong>。快，但断电会丢（除非开持久化）。</p>
+  <table>
+    <tr><th>典型用途</th><th>为什么用它</th></tr>
+    <tr><td>缓存（热点数据）</td><td>查内存比查 MySQL 快几百倍</td></tr>
+    <tr><td>计数器 / 限流</td><td><code>INCR</code> 是原子的，多个请求同时加也不会算错</td></tr>
+    <tr><td>排行榜</td><td>有序集合（ZSet）天生适合排名</td></tr>
+    <tr><td>简单队列</td><td>List 左进右出</td></tr>
+    <tr><td>会话 / 验证码</td><td>设个过期时间，到点自动消失</td></tr>
+  </table>
+  <div class="tip">🧠 记忆方法：Redis = 一个大字典（key → value），只是 value 可以是字符串、列表、哈希、集合、有序集合。</div>
+</div>
+
+<div class="chapter" id="basic">
+  <h2><span class="num">1</span> 连上并跑通第一条命令</h2>
+  <p class="goal">装好后打开终端，用 <code>redis-cli</code>（Windows 上 Memurai 叫 <code>memurai-cli</code>）连本机 6379 端口。</p>
+  <div class="step"><div class="badge">1</div><p><code>PING</code> —— 回 <code>PONG</code> 就说明连上了</p></div>
+  <div class="step"><div class="badge">2</div><p><code>SET key value</code> 存，<code>GET key</code> 取</p></div>
+  <div class="step"><div class="badge">3</div><p><code>INCR key</code> 自增（key 不存在会从 0 开始变成 1）</p></div>
+  <div class="shot"><img src="shots/01_basic.png" alt="Redis 基础命令">
+    <div class="cap">真实输出：PONG / OK / 小明 / 1 / 2</div></div>
+  <div class="ok">✅ 到这里你已经会了 Redis 的核心动作：<strong>存、取、自增</strong>。90% 的日常用法就这三样。</div>
+</div>
+
+<div class="chapter" id="types">
+  <h2><span class="num">2</span> 三种最常用的数据结构</h2>
+  <p class="goal">Redis 的 value 不只是字符串，这是它最容易被低估的地方。</p>
+  <div class="shot"><img src="shots/02_types.png" alt="Redis 数据结构">
+    <div class="cap">List / Hash / Set 的真实命令与输出</div></div>
+  <table>
+    <tr><th>类型</th><th>命令</th><th>像什么</th><th>典型场景</th></tr>
+    <tr><td>String</td><td><code>SET</code> / <code>GET</code> / <code>INCR</code></td><td>一个值</td><td>缓存、计数</td></tr>
+    <tr><td>List</td><td><code>RPUSH</code> / <code>LRANGE</code></td><td>数组</td><td>消息队列、最新列表</td></tr>
+    <tr><td>Hash</td><td><code>HSET</code> / <code>HGETALL</code></td><td>对象</td><td>存一个用户的多个字段</td></tr>
+    <tr><td>Set</td><td><code>SADD</code> / <code>SMEMBERS</code></td><td>去重的袋子</td><td>标签、共同好友</td></tr>
+    <tr><td>ZSet</td><td><code>ZADD</code> / <code>ZRANGE</code></td><td>带分数的集合</td><td>排行榜</td></tr>
+  </table>
+  <div class="tip">💡 <code>LRANGE key 0 -1</code> 里的 <code>-1</code> 表示「最后一个」，这是 Redis 的索引写法（负数从尾部数）。</div>
+</div>
+
+<div class="chapter" id="expire">
+  <h2><span class="num">3</span> 过期、删除、扫描</h2>
+  <p class="goal">缓存必须能自动过期，否则内存会被塞满。</p>
+  <div class="shot"><img src="shots/03_expire.png" alt="Redis 过期与删除">
+    <div class="cap">EXPIRE 设过期 → TTL 查剩余 → DEL 删除 → EXISTS 判断存在</div></div>
+  <table>
+    <tr><th>命令</th><th>作用</th><th>返回值含义</th></tr>
+    <tr><td><code>EXPIRE key 60</code></td><td>60 秒后自动删除</td><td>1=设置成功，0=key 不存在</td></tr>
+    <tr><td><code>TTL key</code></td><td>还剩几秒</td><td>-1=永不过期，-2=已不存在</td></tr>
+    <tr><td><code>DEL key</code></td><td>删除</td><td>删掉的 key 数量</td></tr>
+    <tr><td><code>EXISTS key</code></td><td>是否存在</td><td>1=在，0=不在</td></tr>
+  </table>
+  <div class="danger">🚫 <strong>线上千万别用 <code>KEYS *</code></strong>。它要遍历所有 key，key 一多会把服务器卡住。排查用 <code>SCAN</code>（分批游标），虽然麻烦但不会卡。</div>
+</div>
+
+<div class="chapter" id="info">
+  <h2><span class="num">4</span> 看服务器信息</h2>
+  <p class="goal">连不上、怀疑版本不对时，先看这里。</p>
+  <div class="shot"><img src="shots/04_info.png" alt="Redis INFO">
+    <div class="cap">INFO server 显示版本/系统；DBSIZE 显示当前库有多少 key</div></div>
+  <div class="tip">🔍 你本机的实际版本：<code>memurai_version 8.1.240</code> / <code>redis_version 8.2.5</code>。<br>
+  连不上时依次排查：服务有没有起（Windows 服务里的 Memurai）→ 端口 6379 有没有监听 → 防火墙。</div>
+</div>
+
+<div class="chapter" id="pit">
+  <h2><span class="num">5</span> 新手必踩的坑</h2>
+  <div class="warn"><strong>① 以为 Redis 是数据库，就把唯一数据只放 Redis。</strong><br>
+  它默认在内存里，重启可能丢。重要数据必须有 MySQL/Postgres 兜底。</div>
+  <div class="warn"><strong>② 忘了设过期时间。</strong><br>
+  缓存 key 越积越多，内存爆掉后 Redis 会开始淘汰数据，你的业务就会出现「莫名其妙查不到」。</div>
+  <div class="warn"><strong>③ 用 <code>KEYS *</code> 排查。</strong><br>
+  见上一节，线上会卡死。用 <code>SCAN 0 MATCH demo:* COUNT 100</code>。</div>
+  <div class="warn"><strong>④ 以为 key 不分大小写 / 可以用中文。</strong><br>
+  key 是二进制安全的，中文能存，但运维排查时不好读，建议用 <code>业务:对象:id</code> 格式，比如 <code>user:1:name</code>。</div>
+  <div class="ok">✅ 记住一条：<strong>Redis 是「快」的数据库，不是「不会丢」的数据库。</strong></div>
+</div>
+
+<footer>截图来源：本机 Memurai 8.1（Redis 8.2 协议兼容）· 所有命令真实执行</footer>
+</main>
+</div>
+</body>
+</html>

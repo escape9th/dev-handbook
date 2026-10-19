@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub 新手引导 · 用 LoreForge-agent 实战</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --border:#30363d;
+    --text:#e6edf3; --dim:#8b949e; --accent:#2f81f7;
+    --green:#238636; --red:#da3633; --purple:#8957e5; --yellow:#d29922;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.75}
+  .wrap{display:flex;max-width:1500px;margin:0 auto}
+  nav{position:sticky;top:0;align-self:flex-start;width:260px;height:100vh;overflow:auto;
+    padding:24px 16px;border-right:1px solid var(--border);font-size:14px;flex-shrink:0}
+  nav h3{font-size:12px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase;margin:18px 0 8px}
+  nav a{display:block;color:var(--dim);text-decoration:none;padding:6px 10px;border-radius:6px;margin:2px 0}
+  nav a:hover{background:#1f2630;color:var(--text)}
+  main{flex:1;padding:40px 48px 120px;min-width:0}
+  h1{font-size:34px;margin:0 0 8px}
+  .sub{color:var(--dim);margin-bottom:32px}
+  .chapter{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:28px 28px 20px;margin:0 0 40px}
+  .chapter>h2{display:flex;align-items:center;gap:12px;margin:0 0 6px;font-size:24px}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;
+    border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:17px;flex-shrink:0}
+  .goal{color:var(--dim);margin:0 0 20px;padding-left:50px}
+  .step{display:flex;gap:14px;margin:18px 0;padding-left:6px}
+  .step .badge{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green);
+    color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin-top:3px}
+  .step p{margin:0}
+  code{background:#22272e;padding:2px 7px;border-radius:5px;font-size:13px;
+    font-family:ui-monospace,Consolas,monospace;color:#79c0ff}
+  .shot{margin:22px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#000}
+  .shot img{display:block;width:100%;height:auto}
+  .cap{font-size:13px;color:var(--dim);padding:8px 12px;background:#0b0f14;border-top:1px solid var(--border)}
+  .tip{background:#12233a;border-left:4px solid var(--accent);padding:12px 16px;border-radius:8px;margin:16px 0;font-size:14px}
+  .warn{background:#2b1d0e;border-left:4px solid var(--yellow);padding:12px 16px;border-radius:8px;margin:16px 0;font-size:14px}
+  .danger{background:#2d1416;border-left:4px solid var(--red);padding:12px 16px;border-radius:8px;margin:16px 0;font-size:14px}
+  .pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .p-open{background:#1f6feb33;color:#79c0ff;border:1px solid #1f6feb}
+  .p-merged{background:#8957e533;color:#c297ff;border:1px solid var(--purple)}
+  .p-closed{background:#da363333;color:#ff9c9c;border:1px solid var(--red)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--border);padding:9px 12px;text-align:left}
+  th{background:#1c2128;color:var(--dim);font-weight:600}
+  .kbd{background:#22272e;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;
+    padding:1px 7px;font-size:12px;font-family:ui-monospace,monospace}
+  footer{color:var(--dim);font-size:13px;border-top:1px solid var(--border);padding-top:20px;margin-top:20px}
+  @media(max-width:900px){nav{display:none}main{padding:24px 16px 80px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h3>目录</h3>
+  <a href="#intro">开始之前</a>
+  <a href="#c0">0 · 认识这个页面</a>
+  <a href="#c1">1 · 提一个 Issue</a>
+  <a href="#c2">2 · Fork 别人的仓库</a>
+  <a href="#c3">3 · 从你的 Fork 提 PR</a>
+  <a href="#c4">4 · 看不同版本</a>
+  <a href="#c5">5 · 审别人的 PR（同意/允许）</a>
+  <a href="#c6">6 · 合并 PR</a>
+  <a href="#c7">7 · 状态速查</a>
+  <a href="#faq">常见困惑</a>
+</nav>
+
+<main>
+<h1>GitHub 新手引导</h1>
+<p class="sub">用你自己的项目 <strong>escape9th/LoreForge-agent</strong> 做教材 · 每一步都标出「点哪里」</p>
+
+<div class="chapter" id="intro">
+  <h2><span class="num">★</span> 开始之前</h2>
+  <p class="goal">这份教程里的每张图，都是你这个仓库的真实截图。</p>
+  <div class="step"><div class="badge">1</div><p>浏览器打开：<code>https://github.com/escape9th/LoreForge-agent</code></p></div>
+  <div class="step"><div class="badge">2</div><p>确认你<strong>已登录</strong>（右上角有你的头像）。没登录时很多按钮不显示——这就是新手最常踩的坑。</p></div>
+  <div class="tip">📌 图上的 <strong>红色方框 + 数字</strong> = 按顺序点这里。数字和下方步骤一一对应。</div>
+</div>
+
+<div class="chapter" id="c0">
+  <h2><span class="num">0</span> 认识这个页面</h2>
+  <p class="goal">先知道各个按钮在哪，后面就不会迷路。</p>
+  <div class="shot"><img src="annotated/06_versions.png" alt="仓库首页">
+    <div class="cap">你的 LoreForge-agent 首页：① 当前分支 ② 所有分支 ③ 所有版本(tag)</div></div>
+  <table>
+    <tr><th>位置</th><th>叫什么</th><th>干什么用</th></tr>
+    <tr><td>顶部一排</td><td>Code / Issues / Pull requests</td><td>看代码 / 提问题 / 提改动的申请</td></tr>
+    <tr><td>右上角</td><td>Fork / Star</td><td>复制别人的仓库 / 收藏点赞</td></tr>
+    <tr><td>文件名上方</td><td>main ▾ / 2 Branches / 1 Tag</td><td>切分支 / 看所有分支 / 看所有版本</td></tr>
+  </table>
+</div>
+
+<div class="chapter" id="c1">
+  <h2><span class="num">1</span> 提一个 Issue（最简单的操作）</h2>
+  <p class="goal">Issue = 公开的「任务卡 / 问题单」。报 bug、提需求、提问都用它。任何人都能开。</p>
+  <div class="step"><div class="badge">1</div><p>点顶部 <code>Issues</code> 标签</p></div>
+  <div class="step"><div class="badge">2</div><p>点右上角绿色 <code>New issue</code> 按钮</p></div>
+  <div class="shot"><img src="annotated/02_issue.png" alt="Issues 页面">
+    <div class="cap">① Issues 标签 ② New issue 按钮</div></div>
+  <div class="step"><div class="badge">3</div><p>填 <strong>Title</strong>（一句话说清问题）+ 下面大框写正文</p></div>
+  <div class="step"><div class="badge">4</div><p>点绿色 <code>Submit new issue</code></p></div>
+  <div class="tip">✍️ 好的 Issue 模板：<br>1. 我做了什么<br>2. 期望什么<br>3. 实际什么<br>4. 怎么复现（步骤/截图）</div>
+  <div class="warn">⚠️ 这一步必须<strong>登录</strong>才看得到 <code>New issue</code> 按钮；未登录会跳到登录页。</div>
+</div>
+
+<div class="chapter" id="c2">
+  <h2><span class="num">2</span> Fork 别人的仓库</h2>
+  <p class="goal">Fork = 把<strong>别人的</strong>仓库复制一份到你自己的账号下。你没有对方仓库的写权限，只能 fork 出来改，改完再申请合并回去。</p>
+  <div class="step"><div class="badge">1</div><p>打开想改的仓库（比如别人的项目）</p></div>
+  <div class="step"><div class="badge">2</div><p>点右上角 <code>Fork</code> 按钮</p></div>
+  <div class="shot"><img src="annotated/01_fork.png" alt="Fork 按钮">
+    <div class="cap">① 点 Fork ②③ 顺便认识分支/版本入口</div></div>
+  <div class="step"><div class="badge">3</div><p>在弹出页选 <strong>Owner = 你自己</strong>，保持名字不变，点绿色 <code>Create fork</code></p></div>
+  <div class="tip">🔁 结果：你的账号下多了一个 <code>你的名字/原仓库名</code>。这个副本你<strong>有完整写权限</strong>，随便改。</div>
+</div>
+
+<div class="chapter" id="c3">
+  <h2><span class="num">3</span> 从你的 Fork 提一个 PR</h2>
+  <p class="goal">PR（Pull Request）= 「我改好了，请把我这部分合并进去」。这是把代码送进别人项目的唯一正规途径。</p>
+  <div class="step"><div class="badge">1</div><p>在你 fork 出来的仓库里改文件，<code>Commit changes</code> 提交</p></div>
+  <div class="step"><div class="badge">2</div><p>回到<strong>原仓库</strong>，打开 <code>/compare</code> 页面</p></div>
+  <div class="step"><div class="badge">3</div><p>左边 <code>base</code> 选对方的主分支；右边 <code>compare</code> 选你的分支（跨 fork 时点 “compare across forks”）</p></div>
+  <div class="shot"><img src="annotated/04_compare.png" alt="Compare 页面">
+    <div class="cap">① base=目标分支 ② compare=你的分支 ③ 有差异时这里可点</div></div>
+  <div class="warn">⚠️ 你这仓库所有分支和 tag 都已经合并成同一个提交了，所以截图里两边「没有差异」，按钮是灰的。一旦有差异，这个按钮会变<strong>绿色可点</strong>。</div>
+  <div class="step"><div class="badge">4</div><p>点 <code>Create pull request</code> → 填标题和说明 → 再点一次 <code>Create pull request</code></p></div>
+  <div class="tip">💡 也可以在仓库首页直接点黄色横幅里的 <code>Compare &amp; pull request</code>，效果一样。</div>
+</div>
+
+<div class="chapter" id="c4">
+  <h2><span class="num">4</span> 看不同版本</h2>
+  <p class="goal">想知道「改了什么」「哪个版本」，有四个入口。</p>
+  <div class="shot"><img src="annotated/06_versions.png" alt="版本入口">
+    <div class="cap">① 当前分支 ② 所有分支 ③ 所有版本(tag)</div></div>
+  <table>
+    <tr><th>想看什么</th><th>点哪里</th></tr>
+    <tr><td>切换到另一个分支</td><td>左上角 <code>main ▾</code> 下拉，选分支</td></tr>
+    <tr><td>所有分支列表</td><td><code>2 Branches</code></td></tr>
+    <tr><td>历史提交记录</td><td><code>17 Commits</code>（首页中间）或 <code>/commits/main</code></td></tr>
+    <tr><td>发布版本</td><td><code>1 Tag</code> 或右侧 <code>Releases</code></td></tr>
+    <tr><td><strong>两个版本差多少</strong></td><td>地址后面加 <code>/compare</code></td></tr>
+  </table>
+  <div class="tip">🔍 看差异最快的方法：在浏览器地址栏把 <code>/compare</code> 拼到仓库地址后面，然后选两个分支/tag 对比，diff 会一段段标出 <span style="color:#3fb950">+</span> 新增 / <span style="color:#f85149">-</span> 删除。</div>
+</div>
+
+<div class="chapter" id="c5">
+<h2><span class="num">5</span> 审别人的 PR（同意 / 允许）</h2>
+<p class="goal">你是仓库主人时，别人给你的项目提 PR，你要判断「改得对不对」，然后批准。</p>
+<div class="step"><div class="badge">1</div><p>点 <code>Pull requests</code> → 点开那个 PR</p></div>
+<div class="shot"><img src="annotated/03_pullrequest.png" alt="PR 列表">
+  <div class="cap">① Pull requests 标签 ② New pull request（你自己发起时用）</div></div>
+<div class="step"><div class="badge">2</div><p>点 <code>Files changed</code> 看具体改了哪些行（<span style="color:#3fb950">绿色=新增</span>，<span style="color:#f85149">红色=删除</span>）</p></div>
+<div class="step"><div class="badge">3</div><p>点右上角 <code>Review changes</code> → 选 <strong>Approve</strong>（同意）→ <code>Submit review</code></p></div>
+<div class="tip">✅ 三个选项：<strong>Comment</strong>=只评论 <strong>Approve</strong>=同意合并 <strong>Request changes</strong>=要求改完再来</div>
+<div class="warn">🔑 「允许」有两种意思：<br>
+① <strong>Allow edits by maintainers</strong> —— PR 右侧的勾选框，勾了对方（维护者）可以直接改你的分支，省一轮来回。<br>
+② <strong>邀请合作者</strong> —— 进 <code>Settings → Collaborators</code> 加人，对方才有直接推送权限。</div>
+</div>
+
+<div class="chapter" id="c6">
+<h2><span class="num">6</span> 合并 PR</h2>
+<p class="goal">PR 检查通过、你也批准了，就可以合并进主分支。</p>
+<div class="step"><div class="badge">1</div><p>回到 PR 页的 <code>Conversation</code> 标签，往下滚到底部</p></div>
+<div class="step"><div class="badge">2</div><p>点绿色大按钮 <code>Merge pull request</code></p></div>
+<div class="step"><div class="badge">3</div><p>再点 <code>Confirm merge</code> → 出现紫色 <strong>Merged</strong> 就成功了</p></div>
+<div class="step"><div class="badge">4</div><p>（可选）点 <code>Delete branch</code> 删掉改完的分支，保持仓库干净</p></div>
+<div class="shot"><img src="annotated/05_merge.png" alt="已合并的 PR">
+  <div class="cap">你这个 PR #1 已经是合并状态：① Merged 徽章 ② 14 个提交 ③ 47 个文件改动 ④ +3060/−43 行</div></div>
+<div class="tip">🧩 合并有三种方式：<strong>Merge commit</strong>（保留全部历史，最安全）<strong>Squash</strong>（把多个提交压成 1 个，历史干净）<strong>Rebase</strong>（线性历史，不产生合并提交）。新手先用默认的 Merge commit。</div>
+<div class="danger">🚫 看不到 <code>Merge pull request</code> 按钮？说明你<strong>没有该仓库的写权限</strong>（不是自己的仓库、也没被加为合作者）。这时候你只能评论，不能合并。</div>
+</div>
+
+<div class="chapter" id="c7">
+  <h2><span class="num">7</span> 状态速查</h2>
+  <p class="goal">PR 上那几个彩色小标签是什么意思。</p>
+  <table>
+    <tr><th>看着像</th><th>含义</th><th>还要你做什么</th></tr>
+    <tr><td><span class="pill p-open">Open</span></td><td>还开着，等处理</td><td>等 review 或自己继续改</td></tr>
+    <tr><td><span class="pill p-merged">Merged</span></td><td>已合并进主分支</td><td>没事了，可删分支</td></tr>
+    <tr><td><span class="pill p-closed">Closed</span></td><td>被关掉了（可能被拒）</td><td>看评论找原因，别硬来</td></tr>
+  </table>
+</div>
+
+<div class="chapter" id="faq">
+  <h2><span class="num">?</span> 常见困惑</h2>
+  <p class="goal">这些你一定会遇到。</p>
+  <div class="step"><div class="badge">Q</div><p><strong>通知里只有 1 个 PR，我明明提了 3 个？</strong><br>
+  通知 ≠ PR 列表。GitHub 只在「<em>别人</em>对你的 PR 有新动作」时才通知你。要看全部 PR，去 <code>github.com/pulls</code>。</p></div>
+  <div class="step"><div class="badge">Q</div><p><strong>为什么别人能 fork 我的仓库？</strong><br>
+  Public 仓库谁都能 fork，这是 GitHub 的设计。Fork 只复制，<strong>改不了你的原仓库</strong>，必须提 PR 经你同意。</p></div>
+  <div class="step"><div class="badge">Q</div><p><strong>Fork 完要手动同步吗？</strong><br>
+  对方更新后，你 fork 的副本不会自动更新。打开你 fork 的仓库，点 <code>Sync fork</code> → <code>Update branch</code>。</p></div>
+  <div class="step"><div class="badge">Q</div><p><strong>PR 被关了还能重开吗？</strong><br>
+  自己关的可以点 <code>Reopen</code>；被<strong>维护者</strong>关掉的不能重开，只能读对方规则、改好了重新提一个新的。</p></div>
+</div>
+
+<footer>
+  教材仓库：<a href="https://github.com/escape9th/LoreForge-agent" style="color:#79c0ff">escape9th/LoreForge-agent</a>
+  · 截图均为该仓库真实页面（部分页面因未登录只显示公开部分）
+</footer>
+</main>
+</div>
+</body>
+</html>

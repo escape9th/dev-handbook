@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dev Handbook · 新人上手手册</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#e6edf3;--dim:#8b949e;--accent:#2f81f7;--green:#238636}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.7}
+  .page{max-width:1080px;margin:0 auto;padding:64px 24px 100px}
+  h1{font-size:40px;margin:0 0 10px}
+  .sub{color:var(--dim);font-size:17px;margin-bottom:14px}
+  .banner{background:#12233a;border-left:4px solid var(--accent);padding:14px 18px;border-radius:9px;
+    font-size:14px;margin:26px 0 44px;color:#c9d1d9}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+  a.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:24px;text-decoration:none;color:inherit;transition:.18s;position:relative}
+  a.card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 28px #0006}
+  .ico{font-size:30px;margin-bottom:10px}
+  .card h2{margin:0 0 8px;font-size:21px}
+  .card p{margin:0;color:var(--dim);font-size:14px}
+  .tag{display:inline-block;margin-top:14px;font-size:12px;padding:3px 10px;border-radius:20px;
+    background:#1f6feb33;color:#79c0ff;border:1px solid #1f6feb}
+  .tag.real{background:#23863633;color:#7ee787;border-color:var(--green)}
+  .tag.demo{background:#d2992233;color:#e3b341;border-color:#d29922}
+  .soon{margin-top:48px;background:var(--panel);border:1px dashed var(--border);border-radius:14px;padding:22px 26px}
+  .soon h3{margin:0 0 10px;font-size:16px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+  .soon ul{margin:0;padding-left:20px;color:var(--dim);font-size:14px}
+  .soon li{margin:5px 0}
+  footer{margin-top:56px;color:var(--dim);font-size:13px;border-top:1px solid var(--border);padding-top:20px}
+  code{background:#22272e;padding:2px 7px;border-radius:5px;font-size:13px;font-family:ui-monospace,Consolas,monospace;color:#79c0ff}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Dev Handbook</h1>
+  <p class="sub">新人最容易卡住的那些操作 · 每一步都标出「点哪里 / 敲什么」</p>
+  <div class="banner">
+    🎯 目标：把「教程里一句话带过、但新手就是会卡住」的地方，用<strong>真实截图 + 编号步骤</strong>讲清楚。
+    绿色标记 = 本机真实执行；黄色标记 = 示例输出（本机未装该软件）。
+  </div>
+
+  <div class="grid">
+    <a class="card" href="github/index.html">
+      <div class="ico">🐙</div>
+      <h2>GitHub 操作</h2>
+      <p>Fork / 提 PR / 审别人的 PR / 合并 / 看版本差异 / 提 Issue —— 全部用真实仓库截图。</p>
+      <span class="tag real">真实截图</span>
+    </a>
+
+    <a class="card" href="docker/index.html">
+      <div class="ico">🐳</div>
+      <h2>Docker</h2>
+      <p>镜像 vs 容器、run/ps/logs/exec、Dockerfile、端口映射、数据卷、compose。</p>
+      <span class="tag demo">示例输出</span>
+    </a>
+
+    <a class="card" href="redis/index.html">
+      <div class="ico">🔴</div>
+      <h2>Redis</h2>
+      <p>连接、SET/GET/INCR、List/Hash/Set、过期与删除、服务器信息、线上禁忌。</p>
+      <span class="tag real">真实执行</span>
+    </a>
+
+    <a class="card" href="sql/index.html">
+      <div class="ico">🗄️</div>
+      <h2>SQL / 数据库</h2>
+      <p>建表、查询、条件排序、JOIN、聚合、UPDATE/DELETE 的安全姿势。</p>
+      <span class="tag real">真实执行</span>
+    </a>
+  </div>
+
+  <div class="soon">
+    <h3>计划中</h3>
+    <ul>
+      <li>MySQL / PostgreSQL 安装与连接（本机未安装，装了就能出真实截图）</li>
+      <li>Git 命令行：rebase / stash / cherry-pick / 冲突解决</li>
+      <li>Linux 基础：权限、进程、端口、日志排查</li>
+      <li>环境变量与 Python 虚拟环境（venv / uv）</li>
+      <li>Nginx 反向代理、HTTPS 证书</li>
+      <li>接口调试：curl / Postman</li>
+    </ul>
+  </div>
+
+  <footer>
+    仓库结构：<code>github/</code> <code>docker/</code> <code>redis/</code> <code>sql/</code> · 每章一个 <code>index.html</code> + <code>shots/</code><br>
+    生成脚本：<code>tools/</code>（终端截图由 <code>term_render.py</code> 统一渲染）
+  </footer>
+</div>
+</body>
+</html>
