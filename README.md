@@ -74,6 +74,10 @@ python tools/build_server.py
 2. 截图放 `新章节/shots/`
 3. 在根 `index.html` 加一张卡片
 
+## 更新记录
+
+每个版本改了什么见 [CHANGELOG.md](CHANGELOG.md)。
+
 ## License
 
 MIT
