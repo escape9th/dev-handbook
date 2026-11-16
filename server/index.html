@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>云服务器 + Linux 部署 · 从买到上线</title>
+<link rel="stylesheet" href="../assets/handbook.css">
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h3>本章</h3>
+  <a href="#map">0 · 全流程地图</a>
+  <a href="#buy">1 · 买一台云服务器</a>
+  <a href="#connect">2 · 连上去（SSH）</a>
+  <a href="#linux">3 · Linux 必会命令</a>
+  <a href="#env">4 · 装运行环境</a>
+  <a href="#deploy">5 · 部署你的应用</a>
+  <a href="#nginx">6 · Nginx + HTTPS</a>
+  <a href="#debug">7 · 出问题怎么查</a>
+  <a href="#pit">8 · 新手必踩的坑</a>
+  <h3>其他章节</h3>
+  <a href="../index.html">← 返回总目录</a>
+</nav>
+
+<main>
+<a class="back" href="../index.html">← 总目录</a>
+<h1>云服务器 + Linux 部署</h1>
+<p class="sub">从买一台服务器，到把自己的项目跑在公网上</p>
+
+<div class="banner" style="background:#12233a;border-left:4px solid #2f81f7;padding:14px 18px;border-radius:9px;margin:22px 0;font-size:14px">
+  🟢 <strong>真实执行</strong>：SSH 密钥生成、curl 测试 —— 用你本机 Windows 自带 OpenSSH 真跑出来的<br>
+  🟡 <strong>示例输出</strong>：apt / systemctl / nginx / 远程连接 —— 本机没有服务器，图中已标注，命令是准确的
+</div>
+
+<div class="chapter" id="map">
+  <h2><span class="num">0</span> 全流程地图</h2>
+  <p class="goal">先看清楚整条路，再一步步做。顺序错了会反复返工。</p>
+  <pre class="code"><code>买服务器 → 连上去 → 建普通用户 → 配密钥登录
+   ↓
+装环境（Nginx / Python / 数据库）
+   ↓
+上传代码 → systemd 托管进程 → Nginx 反向代理
+   ↓
+绑域名 → 备案（国内机）→ 申请 HTTPS 证书
+   ↓
+出问题：curl 测端口 → systemctl 看状态 → journalctl 看日志</code></pre>
+  <div class="tip">🧭 新手最容易乱的地方是"跳过第 2 步直接改配置"。先把登录方式弄稳，后面才不会把自己锁在外面。</div>
+</div>
+
+<div class="chapter" id="buy">
+  <h2><span class="num">1</span> 买一台云服务器</h2>
+  <p class="goal">不用买贵的。一个个人项目，最低配就够。</p>
+  <table>
+    <tr><th>项目</th><th>怎么选</th><th>说明</th></tr>
+    <tr><td>厂商</td><td>阿里云 / 腾讯云 / 华为云</td><td>选「轻量应用服务器」，比 ECS/CVM 便宜好管</td></tr>
+    <tr><td>配置</td><td><strong>2 核 2G</strong> 起步</td><td>跑一个网站完全够；要跑数据库就 2 核 4G</td></tr>
+    <tr><td>系统</td><td><strong>Ubuntu 22.04 / 24.04 LTS</strong></td><td>LTS 支持久、教程最多</td></tr>
+    <tr><td>带宽</td><td>3–5 Mbps 或按流量</td><td>小站够用；图片多再升</td></tr>
+    <tr><td>地域</td><td>离用户近</td><td>国内用户选华东/华北</td></tr>
+    <tr><td>价格</td><td>新用户活动 几十–百元/年</td><td>续费会涨价，注意看清</td></tr>
+  </table>
+  <div class="warn">⚠️ <strong>国内服务器绑域名必须备案</strong>（免费，但要 1–20 个工作日）。<br>
+  不想备案：用香港/海外节点，但国内访问会慢一些。</div>
+  <div class="tip">🔐 买完第一件事：去<strong>安全组/防火墙</strong>放行端口。默认一般只开 22；网站要开 <code>80</code> 和 <code>443</code>，否则你配好了也访问不到。</div>
+</div>
+
+<div class="chapter" id="connect">
+  <h2><span class="num">2</span> 连上去（SSH）</h2>
+  <p class="goal">用密钥登录，比密码安全得多。密钥在本机生成，公钥传到服务器。</p>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">2.1 先生成密钥（真实截图）</h3>
+  <div class="shot"><img src="shots/01_sshkey.png" alt="ssh-keygen 真实输出">
+    <div class="cap">Windows 自带 OpenSSH 的真实输出，Linux 上命令完全一样</div></div>
+  <table>
+    <tr><th>文件</th><th>是什么</th><th>怎么处理</th></tr>
+    <tr><td><code>demo_key</code></td><td><strong>私钥</strong></td><td>绝对不外发，留在本机</td></tr>
+    <tr><td><code>demo_key.pub</code></td><td><strong>公钥</strong></td><td>贴到服务器 <code>~/.ssh/authorized_keys</code></td></tr>
+  </table>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">2.2 第一次登录 + 建普通用户（示例输出）</h3>
+  <div class="shot"><img src="shots/02_connect.png" alt="连接服务器">
+    <div class="cap">示例输出：首次连接确认指纹、新建用户、配密钥权限</div></div>
+  <div class="step"><div class="badge">1</div><p><code>ssh root@你的IP</code> —— 第一次会问 <code>yes/no</code>，输 <code>yes</code></p></div>
+  <div class="step"><div class="badge">2</div><p><code>adduser deploy</code> 建普通用户，<code>usermod -aG sudo deploy</code> 给管理权限</p></div>
+  <div class="step"><div class="badge">3</div><p>把公钥放进 <code>/home/deploy/.ssh/authorized_keys</code></p></div>
+  <div class="step"><div class="badge">4</div><p><strong>权限必须是 700 和 600</strong>，否则 ssh 会拒绝登录（这一步最容易错）</p></div>
+  <div class="danger">🚫 <strong>改 sshd 配置前，先开第二个终端保持登录。</strong><br>
+  改错了你自己会被锁在外面，只能去云控制台重置。</div>
+  <pre class="code"><code># 加固（改完先别关当前连接，另开一个窗口验证能登再关）
+nano /etc/ssh/sshd_config
+    PermitRootLogin no            # 禁止 root 直接登录
+    PasswordAuthentication no     # 只允许密钥
+    Port 2222                     # 可选：改端口，少被扫
+
+systemctl restart ssh
+# 然后新窗口试：ssh -p 2222 deploy@你的IP</code></pre>
+</div>
+
+<div class="chapter" id="linux">
+  <h2><span class="num">3</span> Linux 必会命令</h2>
+  <p class="goal">不用背完。会这 20 个就能干活。</p>
+  <div class="shot"><img src="shots/03_linux_basic.png" alt="Linux 基础命令">
+    <div class="cap">示例输出：文件、权限、进程、磁盘、日志</div></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">文件与目录</h3>
+  <table>
+    <tr><th>命令</th><th>作用</th><th>常用写法</th></tr>
+    <tr><td><code>ls</code></td><td>列文件</td><td><code>ls -la</code>（含隐藏+详情）</td></tr>
+    <tr><td><code>cd</code></td><td>进目录</td><td><code>cd /var/www</code>、<code>cd ..</code></td></tr>
+    <tr><td><code>cp / mv / rm</code></td><td>复制/移动/删除</td><td><code>cp -r 源 目标</code>、<code>rm -rf 目录</code>（慎用）</td></tr>
+    <tr><td><code>cat / less</code></td><td>看文件</td><td><code>less 大文件.log</code></td></tr>
+    <tr><td><code>tail -f</code></td><td>实时看日志</td><td><code>tail -f /var/log/nginx/error.log</code></td></tr>
+  </table>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">权限（最容易懵的一块）</h3>
+  <pre class="code"><code>-rwxr-xr-x  1 deploy deploy  58 Oct 20 09:31 run.sh
+ │└┬┘└┬┘└┬┘
+ │ │  │  └── 其他人：r-x（读+执行）
+ │ │  └───── 同组：  r-x
+ │ └──────── 属主：  rwx（读+写+执行）
+ └────────── 文件类型：- 文件 / d 目录 / l 链接
+
+数字写法：r=4 w=2 x=1
+  chmod 755 xxx   → rwxr-xr-x
+  chmod 600 key   → rw-------   （密钥文件必须这样）
+  chown deploy:deploy xxx        （改属主）</code></pre>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">进程、端口、磁盘</h3>
+  <table>
+    <tr><th>想看什么</th><th>命令</th></tr>
+    <tr><td>有哪些进程</td><td><code>ps aux | grep 关键词</code></td></tr>
+    <tr><td>谁在占 CPU/内存</td><td><code>top</code>（按 q 退出）</td></tr>
+    <tr><td><strong>端口有没有在听</strong></td><td><code>ss -lntp | grep 8000</code></td></tr>
+    <tr><td>磁盘还剩多少</td><td><code>df -h</code></td></tr>
+    <tr><td>哪个目录大</td><td><code>du -sh /* | sort -h | tail</code></td></tr>
+    <tr><td>服务状态/启动/重启</td><td><code>systemctl status/start/restart 名字</code></td></tr>
+  </table>
+</div>
+
+<div class="chapter" id="env">
+  <h2><span class="num">4</span> 装运行环境</h2>
+  <p class="goal">Ubuntu 用 apt；装完一定要验证服务真起来了。</p>
+  <div class="shot"><img src="shots/04_env.png" alt="装环境">
+    <div class="cap">示例输出：更新源、装 nginx/python/git、验证服务</div></div>
+  <pre class="code"><code>apt update && apt upgrade -y
+
+# 常用三件套
+apt install -y nginx git curl
+
+# Python（Ubuntu 自带 python3，装 pip 和虚拟环境）
+apt install -y python3-pip python3-venv
+
+# Node（别用 apt 的老版本，用 nvm）
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.bashrc && nvm install 22</code></pre>
+  <div class="tip">✅ 装完马上验证：<code>systemctl status nginx</code> 看 <strong>active (running)</strong>，再 <code>curl -I http://localhost</code> 看有没有 200。</div>
+</div>
+
+<div class="chapter" id="deploy">
+  <h2><span class="num">5</span> 部署你的应用</h2>
+  <p class="goal">核心就一件事：<strong>用 systemd 把进程管起来</strong>，别用 <code>nohup</code> 或 <code>&amp;</code>。</p>
+  <div class="shot"><img src="shots/05_deploy.png" alt="部署应用">
+    <div class="cap">示例输出：拉代码、装依赖、写 systemd 服务、启动验证</div></div>
+  <pre class="code"><code>cd /var/www
+git clone https://github.com/你/项目.git myapp
+cd myapp
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt</code></pre>
+  <p style="margin-top:14px"><strong>写 systemd 服务</strong>（<code>/etc/systemd/system/myapp.service</code>）：</p>
+  <pre class="code"><code>[Unit]
+Description=MyApp
+After=network.target
+
+[Service]
+User=deploy
+WorkingDirectory=/var/www/myapp
+ExecStart=/var/www/myapp/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+  <pre class="code"><code>systemctl daemon-reload      # 改了 unit 文件必须执行
+systemctl enable --now myapp # 开机自启 + 立即启动
+systemctl status myapp       # 看是否 active (running)
+journalctl -u myapp -f       # 实时看应用日志</code></pre>
+  <div class="tip">💡 <strong>为什么要 127.0.0.1 而不是 0.0.0.0？</strong><br>
+  应用只监听本机，公网访问统一走 Nginx。这样端口不外露，也更方便加 HTTPS 和限流。</div>
+  <div class="warn">⚠️ 虚拟环境（venv）里的 python 要<strong>写绝对路径</strong>：<code>/var/www/myapp/venv/bin/python</code>。写 <code>python</code> 会找不到包。</div>
+</div>
+
+<div class="chapter" id="nginx">
+  <h2><span class="num">6</span> Nginx 反向代理 + HTTPS</h2>
+  <p class="goal">让 80/443 端口的请求，转发到你 8000 端口的应用。</p>
+  <div class="shot"><img src="shots/06_nginx.png" alt="Nginx 反代与 HTTPS">
+    <div class="cap">示例输出：配置反代、nginx -t 检查、reload、certbot 上 HTTPS</div></div>
+  <pre class="code"><code># /etc/nginx/sites-available/myapp
+server {
+    listen 80;
+    server_name example.com;          # 换成你的域名
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+  <pre class="code"><code>ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
+nginx -t                  # 先测语法，通过了再 reload
+systemctl reload nginx    # reload 不中断现有连接
+
+# 上 HTTPS（自动改配置、自动续期）
+apt install -y certbot python3-certbot-nginx
+certbot --nginx -d example.com</code></pre>
+  <table>
+    <tr><th>现象</th><th>大概率原因</th></tr>
+    <tr><td>502 Bad Gateway</td><td>后端进程没起来 / 端口不对 —— 先 <code>systemctl status</code></td></tr>
+    <tr><td>403 Forbidden</td><td>目录权限不对，或 Nginx 用户没读权限</td></tr>
+    <tr><td>404 Not Found</td><td><code>root</code>/<code>proxy_pass</code> 路径写错</td></tr>
+    <tr><td>改了不生效</td><td>忘了 <code>systemctl reload nginx</code></td></tr>
+    <tr><td>浏览器打不开</td><td>安全组没放行 80/443</td></tr>
+  </table>
+</div>
+
+<div class="chapter" id="debug">
+  <h2><span class="num">7</span> 出问题怎么查（按这个顺序）</h2>
+  <p class="goal">别乱猜。按「端口 → 服务 → 日志」三层往下查，90% 的问题能定位。</p>
+  <div class="shot"><img src="shots/07_troubleshoot.png" alt="排错">
+    <div class="cap">示例输出：curl 失败 → 服务 failed → 日志报错 → 端口监听 → 磁盘满</div></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">先学会用 curl 测（真实截图）</h3>
+  <div class="shot"><img src="shots/08_curl.png" alt="curl 真实测试">
+    <div class="cap">真实执行：对 example.com 发起请求，拿到真实响应头和耗时</div></div>
+  <table>
+    <tr><th>状态码</th><th>意思</th><th>往哪查</th></tr>
+    <tr><td>200</td><td>通了</td><td>——</td></tr>
+    <tr><td>301 / 302</td><td>跳转</td><td>看 Location 头</td></tr>
+    <tr><td>403</td><td>没权限</td><td>文件权限 / Nginx 配置</td></tr>
+    <tr><td>404</td><td>路径不对</td><td>root / proxy_pass</td></tr>
+    <tr><td>500</td><td>程序报错</td><td><code>journalctl -u 服务名 -n 50</code></td></tr>
+    <tr><td>502</td><td>后端挂了</td><td><code>systemctl status</code> + 端口</td></tr>
+    <tr><td>504</td><td>后端超时</td><td>程序卡死 / 处理太慢</td></tr>
+  </table>
+  <div class="ok">✅ <strong>万能三步：</strong><br>
+  <code>curl -I http://127.0.0.1:8000</code>（服务本身通不通）<br>
+  <code>systemctl status 服务名</code>（进程活着没）<br>
+  <code>journalctl -u 服务名 -n 50</code>（报的什么错）</div>
+</div>
+
+<div class="chapter" id="pit">
+  <h2><span class="num">8</span> 新手必踩的坑</h2>
+  <div class="warn"><strong>① 改 sshd 把自己锁在外面。</strong>改配置前另开一个终端保持登录，验证能进再关。</div>
+  <div class="warn"><strong>② 安全组没放行端口。</strong>服务起来了、本机 curl 也通，外面就是访问不到 —— 九成是安全组/防火墙。</div>
+  <div class="warn"><strong>③ 用 <code>nohup</code> / <code>&amp;</code> 跑服务。</strong>一重启就没了。用 systemd，挂了自动拉起、开机自启。</div>
+  <div class="warn"><strong>④ 忘了 <code>daemon-reload</code>。</strong>改了 .service 文件不 reload，systemd 用的还是旧配置。</div>
+  <div class="warn"><strong>⑤ 磁盘写满。</strong>日志越积越多把盘塞满，服务开始乱挂。定期清日志，或配 logrotate。查：<code>df -h</code>、<code>du -sh /var/log/*</code>。</div>
+  <div class="warn"><strong>⑥ 数据库直接暴露公网。</strong>MySQL/Redis 只听 127.0.0.1，需要时用 SSH 隧道。暴露 6379 第二天就会被挖矿。</div>
+  <div class="danger">🚫 <strong>不要在服务器上跑 <code>rm -rf /</code> 这类命令，也不要用 root 跑应用。</strong>权限越小，出事损失越小。</div>
+  <div class="ok">✅ 记住一条：<strong>本机 <code>127.0.0.1</code> 通 ≠ 公网通。</strong>本机通说明程序没问题，公网不通就是 Nginx 或安全组的问题。</div>
+</div>
+
+<footer>真实截图：SSH 密钥生成、curl 测试 · 示例截图：apt / systemctl / nginx / 远程连接（本机无服务器，图中已标注）</footer>
+</main>
+</div>
+</body>
+</html>
