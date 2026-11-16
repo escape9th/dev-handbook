@@ -18,9 +18,10 @@ for html in ROOT.rglob("*.html"):
     text = html.read_text(encoding="utf-8", errors="replace")
     refs = re.findall(r'(?:src|href)="([^"]+)"', text)
     for ref in refs:
-        if ref.startswith(("http://", "https://", "#", "mailto:", "javascript:")):
+        if ref.startswith(("http://", "https://", "#", "mailto:", "javascript:", "data:")):
             continue
-        if ref.startswith("data:"):
+        # 代码示例里会写成 src="..." / href="..."，那不是真链接，跳过
+        if not ref or not ref.strip("./ "):
             continue
         target = (html.parent / ref.split("#")[0].split("?")[0]).resolve()
         checked += 1
