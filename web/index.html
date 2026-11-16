@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web 网页 · 一个页面是怎么来的</title>
+<link rel="stylesheet" href="../assets/handbook.css">
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h3>本章</h3>
+  <a href="#what">0 · 网页到底是什么</a>
+  <a href="#flow">1 · 从网址到页面</a>
+  <a href="#html">2 · HTML：骨架</a>
+  <a href="#css">3 · CSS：样式</a>
+  <a href="#js">4 · JavaScript：交互</a>
+  <a href="#f12">5 · F12 开发者工具</a>
+  <a href="#demo">6 · 写一个能跑的网页</a>
+  <a href="#front">7 · 静态 / 动态 / 前后端</a>
+  <a href="#pit">8 · 新手常踩的坑</a>
+  <h3>其他章节</h3>
+  <a href="../index.html">← 返回总目录</a>
+</nav>
+
+<main>
+<a class="back" href="../index.html">← 总目录</a>
+<h1>Web 网页</h1>
+<p class="sub">🟢 截图都是真实的：源码用 curl 抓、页面用浏览器真渲染</p>
+
+<div class="chapter" id="what">
+  <h2><span class="num">0</span> 网页到底是什么</h2>
+  <p class="goal">一句话：<strong>浏览器把一堆文本，画成了一个界面。</strong></p>
+  <table>
+    <tr><th>技术</th><th>管什么</th><th>类比身体</th></tr>
+    <tr><td><strong>HTML</strong></td><td>有什么内容（标题、段落、图片、链接）</td><td>骨架</td></tr>
+    <tr><td><strong>CSS</strong></td><td>长什么样子（颜色、大小、位置）</td><td>皮肤和衣服</td></tr>
+    <tr><td><strong>JavaScript</strong></td><td>能做什么（点击、计算、请求数据）</td><td>肌肉和神经</td></tr>
+  </table>
+  <div class="tip">🧠 <strong>三句话记住：</strong>HTML 是<em>内容</em>，CSS 是<em>样子</em>，JS 是<em>行为</em>。<br>
+  网页不是"画"出来的，是你写文本、浏览器负责渲染。</div>
+</div>
+
+<div class="chapter" id="flow">
+  <h2><span class="num">1</span> 从网址到页面</h2>
+  <pre class="code"><code>① 你在地址栏敲 https://example.com 回车
+② DNS 把域名解析成 IP（见「计算机网络」章）
+③ 建立 TCP + TLS 连接
+④ 发 GET / HTTP/1.1 请求
+⑤ 服务器返回 HTML 文本（就是下面那张图的内容）
+⑥ 浏览器解析 HTML，发现还要 CSS / JS / 图片
+⑦ 再发一堆请求把这些要回来
+⑧ 把 HTML + CSS 画成你看到的页面，JS 开始执行交互</code></pre>
+  <div class="tip">💡 所以一个网页通常<strong>不是一个请求</strong>，而是几十上百个请求。<br>
+  打开 F12 的 Network 面板刷新一下，你就看到了。</div>
+</div>
+
+<div class="chapter" id="html">
+  <h2><span class="num">2</span> HTML：骨架</h2>
+  <p class="goal">不用下载任何东西，命令行就能看到网页的真身。</p>
+  <div class="shot"><img src="shots/01_source.png" alt="网页源码">
+    <div class="cap">真实执行：curl 抓取 example.com 返回的原始内容</div></div>
+  <div class="step"><div class="badge">1</div><p><code>&lt;!DOCTYPE html&gt;</code> 声明这是 HTML5</p></div>
+  <div class="step"><div class="badge">2</div><p><code>&lt;head&gt;</code> 里放"给人看之前先设置"的东西（标题、编码、引用的 CSS）</p></div>
+  <div class="step"><div class="badge">3</div><p><code>&lt;body&gt;</code> 里放你在页面上<strong>真正看到的内容</strong></p></div>
+  <div class="step"><div class="badge">4</div><p>标签几乎都是成对的：<code>&lt;p&gt;内容&lt;/p&gt;</code>，少数自闭合如 <code>&lt;img&gt;</code>、<code>&lt;br&gt;</code></p></div>
+  <table>
+    <tr><th>标签</th><th>作用</th></tr>
+    <tr><td><code>&lt;h1&gt;~&lt;h6&gt;</code></td><td>标题（1 最大）</td></tr>
+    <tr><td><code>&lt;p&gt;</code></td><td>段落</td></tr>
+    <tr><td><code>&lt;a href="..."&gt;</code></td><td>链接</td></tr>
+    <tr><td><code>&lt;img src="..."&gt;</code></td><td>图片</td></tr>
+    <tr><td><code>&lt;ul&gt;&lt;li&gt;</code></td><td>无序列表 / 列表项</td></tr>
+    <tr><td><code>&lt;div&gt;</code> / <code>&lt;span&gt;</code></td><td>块级 / 行内容器（用来布局和套样式）</td></tr>
+  </table>
+</div>
+
+<div class="chapter" id="css">
+  <h2><span class="num">3</span> CSS：样式（差别有多大，看图）</h2>
+  <p class="goal">同一个 HTML 文件，加不加 CSS，是两个世界。</p>
+
+  <p style="margin:18px 0 6px;color:#8b949e">❌ 只有 HTML，没有任何样式：</p>
+  <div class="shot"><img src="shots/04_no_css.png" alt="没有 CSS 的页面">
+    <div class="cap">真实渲染：浏览器默认样式（黑字白底）</div></div>
+
+  <p style="margin:18px 0 6px;color:#8b949e">✅ 同一个 HTML，加上 CSS：</p>
+  <div class="shot"><img src="shots/05_with_css.png" alt="有 CSS 的页面">
+    <div class="cap">真实渲染：同一份内容，只多了一段 &lt;style&gt;</div></div>
+
+  <pre class="code"><code>/* 选择器 { 属性: 值; } */
+body {
+  background: #0d1117;      /* 背景色 */
+  color: #e6edf3;           /* 文字颜色 */
+  font-size: 16px;
+  padding: 40px;
+}
+h1    { font-size: 34px; }  /* 选所有 h1 */
+.card { border-radius: 12px; }  /* 选 class="card" 的元素 */
+#main { width: 900px; }     /* 选 id="main" 的元素 */</code></pre>
+  <table>
+    <tr><th>写法</th><th>选什么</th><th>优先级</th></tr>
+    <tr><td><code>h1</code></td><td>所有 h1 标签</td><td>低</td></tr>
+    <tr><td><code>.card</code></td><td>class="card"</td><td>中</td></tr>
+    <tr><td><code>#main</code></td><td>id="main"（页面里唯一）</td><td>高</td></tr>
+  </table>
+  <div class="tip">🎨 新手别自己配色。抄现成的：Tailwind、Bootstrap，或直接用 <code>ui-ux-pro-max</code> 这类工具生成配色方案。</div>
+</div>
+
+<div class="chapter" id="js">
+  <h2><span class="num">4</span> JavaScript：交互</h2>
+  <p class="goal">让页面能"动"：点击、校验、发请求、实时更新。</p>
+  <pre class="code"><code>// 页面里的 JS 写在 &lt;script&gt; 里
+&lt;button id="btn"&gt;点我&lt;/button&gt;
+&lt;p id="out"&gt;&lt;/p&gt;
+
+&lt;script&gt;
+  document.getElementById("btn").addEventListener("click", () =&gt; {
+    document.getElementById("out").textContent = "你点了我！";
+  });
+&lt;/script&gt;</code></pre>
+  <table>
+    <tr><th>要做的事</th><th>大致怎么写</th></tr>
+    <tr><td>选中元素</td><td><code>document.querySelector("#btn")</code></td></tr>
+    <tr><td>改文字</td><td><code>el.textContent = "新内容"</code></td></tr>
+    <tr><td>监听点击</td><td><code>el.addEventListener("click", fn)</code></td></tr>
+    <tr><td>发请求</td><td><code>fetch("/api/data").then(r =&gt; r.json())</code></td></tr>
+  </table>
+  <div class="warn">⚠️ JS 在<strong>你的浏览器里</strong>运行，用户能看到全部代码。所以<strong>绝不能把密码、密钥写在 JS 里</strong>。</div>
+</div>
+
+<div class="chapter" id="f12">
+  <h2><span class="num">5</span> F12 开发者工具</h2>
+  <p class="goal">这是前端最重要的工具，没有之一。按 <code>F12</code> 或右键 →「检查」。</p>
+  <table>
+    <tr><th>面板</th><th>能干什么</th><th>最常用场景</th></tr>
+    <tr><td><strong>Elements</strong></td><td>看/改当前页面的 HTML 和 CSS</td><td>调布局、改颜色试效果</td></tr>
+    <tr><td><strong>Console</strong></td><td>看报错、直接敲 JS</td><td>页面不动了先看这里有没有红色报错</td></tr>
+    <tr><td><strong>Network</strong></td><td>看所有请求：URL、状态码、耗时、响应</td><td><strong>查接口失败</strong>、看谁拖慢了页面</td></tr>
+    <tr><td><strong>Sources</strong></td><td>看 JS 源码、打断点</td><td>调试逻辑</td></tr>
+    <tr><td><strong>Application</strong></td><td>看 Cookie、localStorage 缓存</td><td>登录态没了、缓存问题</td></tr>
+  </table>
+  <div class="tip">🔍 <strong>最实用的一招：</strong>Network 面板 → 勾选 <strong>Preserve log</strong> → 刷新页面 → 按状态码排序 → 看哪个请求是红的（4xx / 5xx）。</div>
+  <div class="warn">⚠️ 在 Elements 里改的东西<strong>刷新就没了</strong>——它只是临时预览，不是真的改文件。</div>
+</div>
+
+<div class="chapter" id="demo">
+  <h2><span class="num">6</span> 写一个能跑的网页（3 分钟）</h2>
+  <p class="goal">不用装任何东西。记事本 + 浏览器就能开始。</p>
+  <div class="step"><div class="badge">1</div><p>新建文件 <code>hello.html</code>（注意后缀是 <code>.html</code>，不是 .txt）</p></div>
+  <div class="step"><div class="badge">2</div><p>把下面的代码粘进去，保存</p></div>
+  <div class="step"><div class="badge">3</div><p><strong>双击这个文件</strong>，浏览器就打开了</p></div>
+  <pre class="code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-CN"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;我的第一个网页&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; max-width: 640px;
+           margin: 40px auto; line-height: 1.8; }
+    h1   { color: #1f6feb; }
+    .box { background: #f6f8fa; padding: 16px;
+           border-radius: 10px; border: 1px solid #d0d7de; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;你好，网页&lt;/h1&gt;
+  &lt;p&gt;这是我写的第一个页面。&lt;/p&gt;
+  &lt;div class="box"&gt;
+    &lt;ul&gt;
+      &lt;li&gt;HTML 管内容&lt;/li&gt;
+      &lt;li&gt;CSS 管样子&lt;/li&gt;
+      &lt;li&gt;JS 管交互&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+  &lt;button onclick="alert('你好！')"&gt;点我&lt;/button&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+  <div class="ok">✅ 成功标志：双击后看到一个带蓝色标题的页面，按钮点了会弹窗。</div>
+</div>
+
+<div class="chapter" id="front">
+  <h2><span class="num">7</span> 静态 / 动态 / 前后端</h2>
+  <table>
+    <tr><th>类型</th><th>是什么</th><th>例子</th></tr>
+    <tr><td><strong>静态页面</strong></td><td>写死的 HTML 文件，谁访问都一样</td><td>这个教程本身</td></tr>
+    <tr><td><strong>动态页面</strong></td><td>服务器每次现算，内容因人而异</td><td>淘宝首页、你的订单页</td></tr>
+    <tr><td><strong>单页应用 SPA</strong></td><td>一个 HTML，全靠 JS 换内容</td><td>大部分后台管理系统</td></tr>
+  </table>
+  <pre class="code"><code>用户浏览器（前端）              服务器（后端）
+   HTML/CSS/JS        ←──→      Python/Node/Java
+   负责显示和交互                 负责数据、逻辑、数据库
+                                  ↑
+                               MySQL / Redis</code></pre>
+  <table>
+    <tr><th>前端做什么</th><th>后端做什么</th></tr>
+    <tr><td>页面长什么样、怎么交互</td><td>数据存哪、怎么算、权限够不够</td></tr>
+    <tr><td>发请求给接口</td><td>提供接口 /api/xxx</td></tr>
+    <tr><td><strong>代码用户全看得见</strong></td><td><strong>代码用户看不见，可以放密钥</strong></td></tr>
+  </table>
+  <div class="tip">💡 前端主要三门（HTML/CSS/JS）+ 一个框架（Vue 或 React）。后端选一门语言就行，Python（Django/FastAPI）或 Node 上手最快。</div>
+</div>
+
+<div class="chapter" id="pit">
+  <h2><span class="num">8</span> 新手常踩的坑</h2>
+  <div class="warn"><strong>① 文件后缀是 .txt 不是 .html。</strong>Windows 默认隐藏扩展名，改名其实变成了 <code>hello.html.txt</code>。要在"查看 → 文件扩展名"里打开。</div>
+  <div class="warn"><strong>② 中文乱码。</strong>忘了写 <code>&lt;meta charset="UTF-8"&gt;</code>，或者文件保存成了 GBK。</div>
+  <div class="warn"><strong>③ 图片不显示。</strong>路径错（相对/绝对）、文件名大小写、或者图片根本没放在同一目录。</div>
+  <div class="warn"><strong>④ 改了代码没变化。</strong><code>Ctrl + F5</code> 强制刷新，绕过缓存。</div>
+  <div class="warn"><strong>⑤ 页面打开是空白。</strong>先按 F12 看 Console 有没有红色报错——九成是 JS 报错中断了渲染。</div>
+  <div class="danger">🚫 <strong>别把敏感信息写进前端</strong>：API key、数据库密码、token。打开 F12 谁都能看到。</div>
+  <div class="ok">✅ <strong>学习顺序建议：</strong>HTML → CSS → JS 基础 → 用 F12 看懂别人的页面 → 再学框架。</div>
+</div>
+
+<footer>真实截图：curl 抓取网页源码、请求头，以及浏览器真实渲染对比（无 CSS / 有 CSS）</footer>
+</main>
+</div>
+</body>
+</html>
