@@ -14,6 +14,7 @@
 | [计算机网络](network/index.html) | 网址到页面全链路 / IP 端口 / DNS / TCP / HTTP / 排查工具 | 本机真实执行 |
 | [命令行](cli/index.html) | 导航 / 重定向 / 管道 / grep / PATH / PowerShell 对照 | 本机真实执行 |
 | [Web 网页](web/index.html) | HTML / CSS（真实渲染对比）/ JS / F12 / 写第一个页面 | 真实抓取 + 真实渲染 |
+| [从开发到上线](workflow/index.html) | 需求 / 设计 / 开发 / 测试 / 上线 / 维护全流程（面向没实习过的学生） | 真实仓库 + 真实 CI 失败与修复 |
 
 ## 怎么看
 
@@ -42,15 +43,18 @@ git clone <this-repo>
 ├── network/                # 计算机网络
 ├── cli/                    # 命令行
 ├── web/                    # Web 网页
+├── workflow/               # 从开发到上线（全流程）
 └── tools/                  # 截图生成脚本
     ├── term_render.py      # 终端风格截图渲染器（共用）
+    ├── check_links.py      # CI：检查死链与图片引用
     ├── build_redis.py      # 真实执行 memurai-cli 生成截图
     ├── build_sql.py        # 真实执行 SQLite 生成截图
     ├── build_docker.py     # 示例输出（本机无 Docker）
     ├── build_server.py     # SSH 密钥/curl 真实执行 + 远程操作示例
     ├── build_network.py    # ping / nslookup / curl / tracert / netstat 真实执行
     ├── build_cli.py        # Git Bash + PowerShell 真实执行
-    └── build_web.py        # curl 抓源码 + 无头浏览器真实渲染
+    ├── build_web.py        # curl 抓源码 + 无头浏览器真实渲染
+    └── build_workflow.py   # 真实仓库历史 / PR / CI / Release
 ```
 
 ## 截图是怎么来的

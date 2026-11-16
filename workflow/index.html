@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从开发到上线 · 真实项目是怎么运转的</title>
+<link rel="stylesheet" href="../assets/handbook.css">
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h3>本章</h3>
+  <a href="#myth">0 · 三个最大的误解</a>
+  <a href="#stage">1 · 六个阶段</a>
+  <a href="#req">2 · 需求：Issue 不是随便写的</a>
+  <a href="#design">3 · 设计：写代码之前</a>
+  <a href="#dev">4 · 开发：分支与 PR</a>
+  <a href="#test">5 · 测试：提测不是丢过去</a>
+  <a href="#release">6 · 上线：这是个仪式</a>
+  <a href="#ops">7 · 维护：上线才是开始</a>
+  <a href="#real">8 · 真实案例：这个仓库走了一遍</a>
+  <a href="#student">9 · 学生最该补的认知</a>
+  <h3>其他章节</h3>
+  <a href="../index.html">← 返回总目录</a>
+</nav>
+
+<main>
+<a class="back" href="../index.html">← 总目录</a>
+<h1>从开发到上线</h1>
+<p class="sub">给没实习过的学生：真实项目里，写代码大概只占 30%的时间</p>
+
+<div class="chapter" id="myth">
+  <h2><span class="num">0</span> 三个最大的误解</h2>
+
+  <div class="warn"><strong>误解一：「写完代码就完了。」</strong><br>
+  真实情况：编码只占 30–40%。剩下是需求对齐、测试、上线、监控、修 bug、还技术债。<br>
+  <strong>面试会问的：</strong>「你这个功能上线后出过什么问题？怎么发现和处理的？」</div>
+
+  <div class="warn"><strong>误解二：「上线就是点个按钮。」</strong><br>
+  真实情况：有发布窗口（不能随便发）、灰度（先放 1% 流量）、回滚预案（出问题 5 分钟内退回去）、值班（半夜也可能被叫）。<br>
+  <strong>面试会问的：</strong>「上线失败怎么办？」不会回滚方案的人，基本会被扣分。</div>
+
+  <div class="warn"><strong>误解三：「代码质量靠自觉。」</strong><br>
+  真实情况：靠<strong>三道闸</strong>——Code Review（人看）、CI（机器测）、测试（用例覆盖）。<br>
+  你的代码不是写给自己看的，是写给三个月后要改它的人看的。</div>
+
+  <div class="tip">🧠 一句话总结：<strong>写代码是「生产」，工程化是「交付 + 兜底」。</strong>学校教生产，实习教交付。</div>
+</div>
+
+<div class="chapter" id="stage">
+  <h2><span class="num">1</span> 六个阶段，一个循环</h2>
+  <pre class="code"><code>① 需求  ──→  ② 设计  ──→  ③ 开发  ──→  ④ 测试  ──→  ⑤ 上线
+   ↑                                                      │
+   └────────────────  ⑥ 运维 / 迭代  ←───────────────────┘</code></pre>
+  <table>
+    <tr><th>阶段</th><th>谁参与</th><th>产出物</th><th>最容易翻车的地方</th></tr>
+    <tr><td>① 需求</td><td>产品 + 开发 + 测试</td><td>PRD / Issue</td><td>需求没写清就开工</td></tr>
+    <tr><td>② 设计</td><td>开发（+ 资深评审）</td><td>技术方案 / 接口 / 表结构</td><td>跳过评审直接写</td></tr>
+    <tr><td>③ 开发</td><td>开发</td><td>代码 + PR</td><td>不写测试，不写清楚的提交说明</td></tr>
+    <tr><td>④ 测试</td><td>测试 + 开发</td><td>测试用例 / Bug 单</td><td>提测质量差，来回打回</td></tr>
+    <tr><td>⑤ 上线</td><td>运维 + 开发</td><td>发布记录 / 回滚预案</td><td>没有回滚方案</td></tr>
+    <tr><td>⑥ 运维</td><td>全员</td><td>监控 / 告警 / 复盘报告</td><td>只做功能，不做监控</td></tr>
+  </table>
+
+  <h3 style="font-size:16px;margin:24px 0 10px">真实团队至少有 4–5 套环境</h3>
+  <table>
+    <tr><th>环境</th><th>干什么用</th><th>谁能碰</th></tr>
+    <tr><td><strong>本地 local</strong></td><td>自己写自己跑，随便改</td><td>你</td></tr>
+    <tr><td><strong>开发 dev</strong></td><td>合并后自动部署，先看能不能跑</td><td>开发</td></tr>
+    <tr><td><strong>测试 test / staging</strong></td><td>给 QA 点，造真实数据测</td><td>测试</td></tr>
+    <tr><td><strong>预发 pre</strong></td><td>和生产一模一样，上线前最后验一遍</td><td>核心成员</td></tr>
+    <tr><td><strong>生产 prod</strong></td><td>真正的用户在用</td><td>发布权限</td></tr>
+  </table>
+  <div class="danger">🚫 <strong>学生的经典灾难：</strong>把测试数据插进生产库、把生产配置改成测试地址。<br>
+  <strong>铁律：动手前先确认自己在哪套环境。</strong>看配置、看域名、看数据库名。</div>
+</div>
+
+<div class="chapter" id="req">
+  <h2><span class="num">2</span> 需求：Issue 不是随便写的</h2>
+  <p class="goal">一个能干活的需求，必须回答：谁、什么场景、做到什么算完成。</p>
+  <div class="shot"><img src="shots/02_issue.png" alt="真实 Issue">
+    <div class="cap">真实截图：这个仓库自己开的一个 Issue（含验收项）</div></div>
+  <table>
+    <tr><th>要素</th><th>反例 ❌</th><th>正例 ✅</th></tr>
+    <tr><td>背景</td><td>"加个导出功能"</td><td>"运营每月要手工整理订单，耗时 2 天"</td></tr>
+    <tr><td>范围</td><td>"导全部"</td><td>"导出近 3 个月的订单，只能导自己的"</td></tr>
+    <tr><td>验收</td><td>（没有）</td><td>"点导出 30 秒内出 Excel，带 6 个字段"</td></tr>
+  </table>
+  <div class="tip">✅ <strong>开发要问的三个问题：</strong>① 不做行不行？② 最简单的做法是什么？③ 怎么算做完了？</div>
+  <div class="warn">⚠️ 需求不清就开工，最后一定是返工。<strong>返工比多问两句贵十倍。</strong></div>
+</div>
+
+<div class="chapter" id="design">
+  <h2><span class="num">3</span> 设计：写代码之前想清楚</h2>
+  <p class="goal">不用写很长的文档，但要能说清四件事。</p>
+  <table>
+    <tr><th>要写清</th><th>例子</th></tr>
+    <tr><td><strong>数据怎么存</strong></td><td>新增 orders 表，字段：id / user_id / amount / status / created_at</td></tr>
+    <tr><td><strong>接口长什么样</strong></td><td><code>GET /api/orders/export?from=...&amp;to=...</code> 返回文件流</td></tr>
+    <tr><td><strong>边界情况</strong></td><td>没有数据怎么办？超过 1 万条怎么办？并发导出呢？</td></tr>
+    <tr><td><strong>怎么验证</strong></td><td>本地造 1 万条数据，测导出耗时</td></tr>
+  </table>
+  <div class="tip">💡 设计评审只解决一个问题：<strong>能不能更简单？</strong>能简单实现就别搞复杂的。</div>
+  <div class="warn">⚠️ 表结构改起来最贵（要迁移数据），所以表设计一定要先评审。</div>
+</div>
+
+<div class="chapter" id="dev">
+  <h2><span class="num">4</span> 开发：分支、提交、PR、Review</h2>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">标准四步（真实命令）</h3>
+  <div class="shot"><img src="shots/02_change_flow.png" alt="git 四步">
+    <div class="cap">真实执行：git status → add → commit → push</div></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">分支策略</h3>
+  <pre class="code"><code>main           ← 永远能上线，不能直接改
+ └─ feat/xxx   ← 加功能
+ └─ fix/xxx    ← 修 bug
+ └─ hotfix/xxx ← 线上紧急修复</code></pre>
+  <div class="step"><div class="badge">1</div><p>从 <code>main</code> 拉分支：<code>git checkout -b feat/export-orders</code></p></div>
+  <div class="step"><div class="badge">2</div><p>小步提交，一个提交只做一件事</p></div>
+  <div class="step"><div class="badge">3</div><p>推上去开 PR，<strong>写完自测一遍再叫别人看</strong></p></div>
+  <div class="step"><div class="badge">4</div><p>通过后 squash 合并，删分支</p></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">提交说明怎么写</h3>
+  <table>
+    <tr><th>❌ 别这么写</th><th>✅ 这么写</th></tr>
+    <tr><td><code>update</code> / <code>fix</code> / <code>改了点东西</code></td><td><code>feat: 订单支持按时间范围导出</code></td></tr>
+    <tr><td><code>aaaa</code> / <code>1</code></td><td><code>fix: 导出 0 条数据时报错 500</code></td></tr>
+  </table>
+  <pre class="code"><code>feat:     新功能
+fix:      修 bug
+docs:     只改文档
+refactor: 重构（行为不变）
+test:     加测试
+chore:    杂事（依赖、配置）</code></pre>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">PR 页面上该看什么</h3>
+  <div class="shot"><img src="shots/01_pr.png" alt="真实 PR">
+    <div class="cap">真实截图：这个仓库的 PR #2（Codes 绿勾、Files changed、Closes #1）</div></div>
+  <table>
+    <tr><th>区域</th><th>含义</th></tr>
+    <tr><td>Conversation</td><td>讨论区：说明改了什么、为什么改</td></tr>
+    <tr><td>Commits</td><td>这个 PR 包含几个提交</td></tr>
+    <tr><td><strong>Checks</strong></td><td>CI 结果：绿勾才能合，红叉先修</td></tr>
+    <tr><td>Files changed</td><td>逐行 diff —— <strong>Review 就看这里</strong></td></tr>
+  </table>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">Code Review 到底看什么</h3>
+  <table>
+    <tr><th>要看</th><th>例子</th></tr>
+    <tr><td>逻辑对不对</td><td>边界条件、空值、并发</td></tr>
+    <tr><td>有没有安全隐患</td><td>SQL 拼接、权限校验、日志打密码</td></tr>
+    <tr><td>能不能读懂</td><td>命名、注释、拆得太碎或太糗</td></tr>
+    <tr><td>有没有测试</td><td>新逻辑至少一条用例</td></tr>
+    <tr><td>影响面</td><td>改了公共方法，别的地方会不会挂</td></tr>
+  </table>
+  <div class="tip">💬 Review 的礼貌：<strong>评论对事不对人</strong>。说"这里并发下可能出问题"而不是"你怎么想的"。</div>
+</div>
+
+<div class="chapter" id="test">
+  <h2><span class="num">5</span> 测试：提测不是"丢过去"</h2>
+  <p class="goal">提测 = 我这边确认没问题了，请帮我验证。不是"你帮我找 bug"。</p>
+  <table>
+    <tr><th>层级</th><th>谁写</th><th>测什么</th><th>快慢</th></tr>
+    <tr><td><strong>单元测试</strong></td><td>开发</td><td>一个函数/方法对不对</td><td>毫秒级</td></tr>
+    <tr><td><strong>接口测试</strong></td><td>开发/测试</td><td>请求返回对不对</td><td>秒级</td></tr>
+    <tr><td><strong>集成/联调</strong></td><td>前后端一起</td><td>两个服务接起来通不通</td><td>分钟级</td></tr>
+    <tr><td><strong>回归测试</strong></td><td>测试</td><td>改了 A 有没有弄坏 B</td><td>小时级</td></tr>
+    <tr><td><strong>冒烟测试</strong></td><td>发布后</td><td>核心功能还能不能用</td><td>5 分钟</td></tr>
+  </table>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">Bug 的生命周期</h3>
+  <pre class="code"><code>测试发现 → 提 Bug 单（复现步骤/期望/实际/环境）
+     ↓
+开发确认（是不是 Bug / 谁的模块）
+     ↓
+修复 → 自测 → 标「已修复」
+     ↓
+测试回归验证 → 通过关单 / 不通过打回</code></pre>
+  <div class="warn">⚠️ <strong>Bug 单写得烂，会被打回：</strong>「有问题」+ 一张截图 = 开发无法复现 = 来回扯皮一天。<br>
+  正确写法：「在测试环境，用 A 账号、无订单，点导出，报 500，日志是 xxx」。</div>
+  <div class="tip">✅ <strong>提测清单：</strong>自测过核心流程 / 边界情况试过 / 知道改了哪些文件 / 准备好测试数据 / 说明怎么测。</div>
+</div>
+
+<div class="chapter" id="release">
+  <h2><span class="num">6</span> 上线：这是个仪式</h2>
+  <p class="goal">上线不是"点按钮"，是一套降低风险的流程。</p>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">上线前检查清单</h3>
+  <table>
+    <tr><th>项</th><th>为什么</th></tr>
+    <tr><td>☐ CI 全绿</td><td>自动检查都过了</td></tr>
+    <tr><td>☐ 在预发环境验过</td><td>和生产一样的环境</td></tr>
+    <tr><td>☐ <strong>回滚方案准备好了</strong></td><td>出问题能 5 分钟内退回去</td></tr>
+    <tr><td>☐ 数据库变更可逆</td><td>加字段可以，删字段先别删</td></tr>
+    <tr><td>☐ 有人值班</td><td>出问题有人接</td></tr>
+    <tr><td>☐ 在低峰期发</td><td>别在流量高峰动手</td></tr>
+  </table>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">发布策略</h3>
+  <table>
+    <tr><th>方式</th><th>怎么做</th><th>适合</th></tr>
+    <tr><td><strong>全量发布</strong></td><td>直接换掉</td><td>小项目、内部系统</td></tr>
+    <tr><td><strong>灰度</strong></td><td>先 1% → 10% → 100%</td><td>用户量大的功能</td></tr>
+    <tr><td><strong>蓝绿</strong></td><td>新旧两套并存，切流量</td><td>要求零停机</td></tr>
+    <tr><td><strong>功能开关</strong></td><td>代码先上线，开关控制是否生效</td><td>想随时关掉的功能</td></tr>
+  </table>
+  <div class="danger">🚫 <strong>上线三不要：</strong>不要在周五下午发、不要在没人值班时发、不要在下班前 10 分钟发。<br>
+  这不是段子，是无数事故换来的。</div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">发版：tag 和 Release</h3>
+  <div class="shot"><img src="shots/06_release.png" alt="发版">
+    <div class="cap">真实执行：打 tag → 推送 → 创建 Release</div></div>
+  <div class="shot"><img src="shots/05_release.png" alt="Release 页面">
+    <div class="cap">真实截图：这个仓库的 v1.0.0 Release</div></div>
+</div>
+
+<div class="chapter" id="ops">
+  <h2><span class="num">7</span> 维护：上线才是开始</h2>
+  <p class="goal">线上跑起来之后，才是真正的长期工作。</p>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">监控与告警</h3>
+  <table>
+    <tr><th>看什么</th><th>指标</th><th>告警阈值举例</th></tr>
+    <tr><td>服务活着吗</td><td>健康检查 / 端口</td><td>连续 2 次失败</td></tr>
+    <tr><td>错误多不多</td><td>错误率、5xx 数</td><td>5 分钟错误率 &gt; 1%</td></tr>
+    <tr><td>快不快</td><td>响应时间 P95 / P99</td><td>P99 &gt; 2s</td></tr>
+    <tr><td>机器扛得住吗</td><td>CPU / 内存 / 磁盘</td><td>磁盘 &gt; 85%</td></tr>
+    <tr><td>业务正常吗</td><td>订单量、注册数</td><td>同比掉 50%</td></tr>
+  </table>
+  <div class="tip">💡 <strong>没有告警 = 只能等用户骂你。</strong>「用户反馈才知道」是最差的故障发现方式。</div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">事故分级与处理</h3>
+  <table>
+    <tr><th>级别</th><th>什么情况</th><th>响应</th></tr>
+    <tr><td><strong>P0</strong></td><td>全站不可用 / 数据丢失</td><td>立刻全员响应，先止损</td></tr>
+    <tr><td><strong>P1</strong></td><td>核心功能不可用</td><td>30 分钟内响应</td></tr>
+    <tr><td><strong>P2</strong></td><td>部分功能异常 / 影响小</td><td>当天处理</td></tr>
+    <tr><td><strong>P3</strong></td><td>体验问题 / 文案错误</td><td>排期处理</td></tr>
+  </table>
+  <div class="step"><div class="badge">1</div><p><strong>先止损，再查原因。</strong>回滚 / 切流量 / 关开关，别一边排查一边让用户在报错</p></div>
+  <div class="step"><div class="badge">2</div><p>定位：看监控、看日志、看最近改动（八成是刚发的版本）</p></div>
+  <div class="step"><div class="badge">3</div><p>修复并验证</p></div>
+  <div class="step"><div class="badge">4</div><p><strong>复盘（Postmortem）</strong>：写清时间线、根因、改进项，<strong>对人不对责</strong></p></div>
+  <div class="warn">⚠️ 复盘的目的不是找人背锅，是让同样的错不再犯。写成"某人粗心"等于没写。</div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">迭代：技术债要还</h3>
+  <table>
+    <tr><th>现象</th><th>后果</th></tr>
+    <tr><td>一个文件 3000 行</td><td>没人敢改，改一次崩一次</td></tr>
+    <tr><td>没有测试</td><td>每次上线都提心吊胆</td></tr>
+    <tr><td>复制粘贴三份</td><td>改一处漏两处</td></tr>
+    <tr><td>依赖几年没升级</td><td>有漏洞，升不动</td></tr>
+  </table>
+  <div class="tip">📌 真实团队会留 10–20% 的容量还技术债。不还，最后会以"重构一个月"的方式加倍偿还。</div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">文档：写给人看的</h3>
+  <p>至少要有三样：<strong>README</strong>（怎么跑起来）、<strong>CHANGELOG</strong>（每版改了什么）、<strong>部署文档</strong>（怎么上线/回滚）。</p>
+</div>
+
+<div class="chapter" id="real">
+  <h2><span class="num">8</span> 真实案例：这个仓库自己走了一遍</h2>
+  <p class="goal">下面不是编的场景，是 <code>escape9th/dev-handbook</code> 里真实发生的事。</p>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">① 仓库是这么长出来的（真实提交历史）</h3>
+  <div class="shot"><img src="shots/01_history.png" alt="真实提交历史">
+    <div class="cap">真实执行：git log --oneline --graph / git tag / git branch -a</div></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">② 提需求 → 开 Issue</h3>
+  <p>发现"缺 CHANGELOG"，于是开了一个 Issue #1，写清三个验收项。</p>
+  <div class="shot"><img src="shots/02_issue.png" alt="Issue">
+    <div class="cap">真实截图：issues/1</div></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">③ 拉分支、写代码、提 PR</h3>
+  <div class="shot"><img src="shots/03_pr_cmds.png" alt="PR 命令">
+    <div class="cap">真实执行：gh pr list / gh pr view / gh pr checks</div></div>
+  <div class="shot"><img src="shots/01_pr.png" alt="PR 页面">
+    <div class="cap">真实截图：PR #2，Checks 绿勾，Closes #1</div></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">④ CI 挂了 —— 这是最有价值的一段</h3>
+  <p>加了 CI 之后第一次跑，<strong>红了</strong>。日志说 <code>web/index.html</code> 有两个链接找不到。</p>
+  <div class="shot"><img src="shots/05_ci_failed.png" alt="CI 失败日志">
+    <div class="cap">真实执行：gh run view --log-failed 的真实输出</div></div>
+  <div class="tip">🔍 <strong>根因很有意思：</strong>页面里有一段代码示例写的是 <code>src="..."</code>，被检查脚本当成了真链接。<br>
+  更关键的是——<strong>本地 Windows 上 <code>...</code> 能解析成一个路径，所以本地是过的；Linux 上不存在，所以 CI 挂。</strong><br>
+  这就是「本地能跑、CI 挂」的典型：<strong>路径、大小写、换行符、依赖版本</strong>。</div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">⑤ 修好、CI 变绿</h3>
+  <div class="shot"><img src="shots/04_ci.png" alt="CI 通过">
+    <div class="cap">真实执行：gh run list —— 一条 failure，一条 success</div></div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">⑥ 合并、打 tag、发 Release</h3>
+  <div class="shot"><img src="shots/04_pr_merged.png" alt="已合并的 PR">
+    <div class="cap">真实截图：PR #2 已合并（紫色 Merged）</div></div>
+  <div class="shot"><img src="shots/05_release.png" alt="Release">
+    <div class="cap">真实截图：releases/tag/v1.0.0</div></div>
+
+  <div class="ok">✅ <strong>这六步就是一个完整迭代。</strong>以后每次加功能，都是这个循环再来一遍。</div>
+</div>
+
+<div class="chapter" id="student">
+  <h2><span class="num">9</span> 学生最该补的认知</h2>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">从「交作业」到「做产品」的五个转变</h3>
+  <table>
+    <tr><th>作业思维</th><th>工程思维</th></tr>
+    <tr><td>能跑就行</td><td>能跑 + 能改 + 能排查</td></tr>
+    <tr><td>写完就交</td><td>自测 → 提测 → 上线 → 监控</td></tr>
+    <tr><td>报错就贴截图</td><td>看日志、看监控、给复现步骤</td></tr>
+    <tr><td>代码只有我看</td><td>别人要读，Review 要过</td></tr>
+    <tr><td>改坏了重写</td><td>线上不能重写，只能回滚</td></tr>
+  </table>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">面试里最容易被问穿的三题</h3>
+  <div class="warn"><strong>① 「你项目上线了吗？」</strong><br>
+  没真上线过，就说清楚：本地跑通 / 有 CI / 部署过到服务器。别吹生产环境。</div>
+  <div class="warn"><strong>② 「遇到最难的问题是什么？」</strong><br>
+  答法：「现象 → 我以为是 A → 排查发现是 B → 怎么验证 → 怎么修的 → 后来怎么避免的」。<strong>过程比结论值钱。</strong></div>
+  <div class="warn"><strong>③ 「多人协作你用过 Git 哪些？」</strong><br>
+  能说出：拉分支、提交规范、PR、Code Review、解决冲突、tag 发版 —— 就比 90% 的学生强。</div>
+
+  <h3 style="font-size:16px;margin:20px 0 8px">没实习怎么补这段经历</h3>
+  <div class="step"><div class="badge">1</div><p>把自己项目<strong>真的部署上线</strong>（几十块一年的服务器就够），拿到公网地址</p></div>
+  <div class="step"><div class="badge">2</div><p>给项目<strong>加 CI</strong>（就像这个仓库），让每次提交自动检查</p></div>
+  <div class="step"><div class="badge">3</div><p>写 <strong>CHANGELOG 和版本号</strong>，让别人看到你怎么迭代</p></div>
+  <div class="step"><div class="badge">4</div><p>去开源项目<strong>提 PR</strong>，体验真实 Review 和被打回</p></div>
+  <div class="step"><div class="badge">5</div><p>故意<strong>制造一次事故</strong>（测试环境），然后练回滚和复盘</p></div>
+
+  <div class="ok">✅ 做完这五步，你讲项目的时候，说的就不是"我写了个网站"，而是"我维护了一个有 CI、有版本、能回滚的项目"。这是两回事。</div>
+</div>
+
+<footer>本章截图：GitHub 真实页面 + 本仓库真实命令输出（含一次真实的 CI 失败与修复）</footer>
+</main>
+</div>
+</body>
+</html>
